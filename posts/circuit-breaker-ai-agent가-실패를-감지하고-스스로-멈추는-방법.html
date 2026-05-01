@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuit Breaker: AI Agent가 실패를 감지하고 스스로 멈추는 방법 — OO 기술 블로그</title>
+    <meta name="description" content="AI Agent가 같은 실패를 반복하지 않도록 자동으로 멈추는 Circuit Breaker 패턴의 원리, OpenOrchestrator의 이중 구현(글로벌 inbox-watcher + 프로젝트별 circuit-state), 상태를 명시적 필드가 아닌 `consecutive_failures`와 `cooldown_until` 두 값으로 유도하는 설계, 13개 Agent 통합 대시보드 API와 삼중 방어선 통합을 다룹니다.">
+    <meta name="keywords" content="AI, Agentic-AI, Circuit-Breaker, OpenOrchestrator, Resilience, 자동화, Fault-Tolerance">
+    <link rel="canonical" href="https://onyourside22.tistory.com">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Circuit Breaker: AI Agent가 실패를 감지하고 스스로 멈추는 방법">
+    <meta property="og:description" content="AI Agent가 같은 실패를 반복하지 않도록 자동으로 멈추는 Circuit Breaker 패턴의 원리, OpenOrchestrator의 이중 구현(글로벌 inbox-watcher + 프로젝트별 circuit-state), 상태를 명시적 필드가 아닌 `consecutive_failures`와 `cooldown_until` 두 값으로 유도하는 설계, 13개 Agent 통합 대시보드 API와 삼중 방어선 통합을 다룹니다.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://onyourside22.tistory.com">
+    <meta property="og:site_name" content="OO 기술 블로그">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Circuit Breaker: AI Agent가 실패를 감지하고 스스로 멈추는 방법">
+    <meta name="twitter:description" content="AI Agent가 같은 실패를 반복하지 않도록 자동으로 멈추는 Circuit Breaker 패턴의 원리, OpenOrchestrator의 이중 구현(글로벌 inbox-watcher + 프로젝트별 circuit-state), 상태를 명시적 필드가 아닌 `consecutive_failures`와 `cooldown_until` 두 값으로 유도하는 설계, 13개 Agent 통합 대시보드 API와 삼중 방어선 통합을 다룹니다.">
+
+    <!-- Article metadata -->
+    <meta property="article:published_time" content="2026-04-20">
+    <meta property="article:section" content="Vibe Coding">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            line-height: 1.8;
+            color: #333;
+        }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.5rem; margin-top: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.3rem; }
+        h3 { font-size: 1.2rem; margin-top: 1.5rem; }
+        pre { background: #f6f8fa; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+        code { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+        blockquote { border-left: 4px solid #dfe2e5; margin: 1rem 0; padding: 0.5rem 1rem; color: #6a737d; }
+        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        th, td { border: 1px solid #dfe2e5; padding: 0.5rem; text-align: left; }
+        th { background: #f6f8fa; }
+        .meta { color: #666; font-size: 0.9rem; margin-bottom: 2rem; }
+        .canonical-notice { background: #fff3cd; padding: 0.75rem; border-radius: 4px; margin-bottom: 2rem; font-size: 0.85rem; }
+        a { color: #0366d6; }
+        nav { margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+    <nav><a href="index.html">&larr; OO 기술 블로그 시리즈 목록</a></nav>
+
+    <article>
+        <h1>Circuit Breaker: AI Agent가 실패를 감지하고 스스로 멈추는 방법</h1>
+        <div class="meta">
+            <time datetime="2026-04-20">2026-04-20</time> &middot;
+            12분 읽기 &middot;
+            AI, Agentic-AI, Circuit-Breaker, OpenOrchestrator, Resilience
+        </div>
+
+        <div class="canonical-notice">
+            이 글의 원본은 <a href="https://onyourside22.tistory.com">Tistory 블로그</a>에서 확인할 수 있습니다.
+        </div>
+
+        <blockquote>**OpenOrchestrator 시리즈 5편** | 2026.04</blockquote>
+<p>></p>
+<blockquote>이 글을 읽으면 세 가지를 알게 됩니다:</blockquote>
+<blockquote>- AI Agent가 같은 실수를 반복하지 않도록 자동으로 멈추는 원리</blockquote>
+<blockquote>- Circuit Breaker(회로 차단기)의 세 가지 상태와 실제 구현 코드</blockquote>
+<blockquote>- 하나의 시스템 안에서 두 계층(글로벌 + 프로젝트별)으로 Circuit Breaker를 쌓는 이유</blockquote>
+
+<hr>
+
+<h2>Git lock 파일이 3번 충돌했을 때 벌어진 일</h2>
+
+<p>지난 4편에서 53개 작업을 Wave 단위로 병렬 처리한 이야기를 했습니다. 그 실행 기록 중 이런 대목이 있었죠.</p>
+
+<blockquote>한 프로젝트에서 Git lock 파일 충돌이 3회 연속 발생해 자동 정지됐습니다. circuit breaker가 없었다면 같은 에러를 무한 반복했을 겁니다.</blockquote>
+
+<p>이 한 줄이 이번 편의 주인공입니다.</p>
+
+<p>상황을 구체적으로 설명하면 이렇습니다. Wave 2에서 두 개의 Agent가 같은 프로젝트 폴더에 동시에 접근했습니다. 한 Agent가 <code>git commit</code>을 실행하는 동안 다른 Agent도 <code>git commit</code>을 시도했고, <code>.git/index.lock</code> 파일이 이미 존재한다는 에러가 발생했습니다.</p>
+
+<p>첫 번째 실패 — 일시적인 문제일 수 있으니 재시도합니다.</p>
+<p>두 번째 실패 — 아직 lock이 남아 있네요. 한 번 더 시도합니다.</p>
+<p>세 번째 실패 — 이건 일시적인 문제가 아닙니다. <strong>자동 정지.</strong></p>
+
+<p>이 "3번 실패하면 멈추기"가 바로 Circuit Breaker(회로 차단기) 패턴입니다.</p>
+
+<h2>Circuit Breaker란 무엇인가</h2>
+
+<p>전기 공학에서 온 개념입니다. 집에 있는 차단기(두꺼비집)를 떠올려보세요. 전선에 과전류가 흐르면 차단기가 "딱" 내려가면서 전기를 끊습니다. 차단기가 없으면 어떻게 될까요? 과전류가 계속 흘러서 전선이 타고, 최악의 경우 화재가 납니다.</p>
+
+<p>소프트웨어에서도 같은 원리를 씁니다. 외부 서비스 호출이 계속 실패하면, 일정 횟수 이후 호출 자체를 차단합니다. 실패할 게 뻔한 요청을 계속 보내는 것은 시간 낭비이고, 상대 서비스에 부하만 더합니다.</p>
+
+<p>OpenOrchestrator에서는 이 패턴을 <strong>Agent 실행 단위</strong>에 적용했습니다. Agent가 작업을 실행하다 연속으로 실패하면, 더 이상 새 작업을 시도하지 않고 멈춥니다. 그리고 사람에게 알림을 보냅니다.</p>
+
+<h2>세 가지 상태: Closed → Open → Half-Open</h2>
+
+<p>고전적인 Circuit Breaker 패턴에는 세 가지 상태가 있습니다.</p>
+
+<p>| 상태 | 의미 | 비유 |</p>
+<p>|------|------|------|</p>
+<p>| <strong>Closed</strong> (닫힘) | 정상 운영. 요청이 통과됨 | 차단기가 올라가 있음 — 전기가 흐름 |</p>
+<p>| <strong>Open</strong> (열림) | 차단 상태. 요청을 보내지 않음 | 차단기가 내려감 — 전기 차단 |</p>
+<p>| <strong>Half-Open</strong> (반열림) | 시험 복구. 한 건만 통과시켜 봄 | 차단기를 살짝 올려서 테스트 |</p>
+
+<p>이름이 헷갈릴 수 있습니다. "Closed"가 정상이고 "Open"이 차단입니다. 전기 회로에서 닫힌(closed) 회로가 전류가 흐르는 상태이고, 열린(open) 회로가 끊어진 상태인 것과 같습니다.</p>
+
+<p>상태 전이를 순서대로 보면:</p>
+
+<pre><code>
+[Closed] —— 연속 N회 실패 ——→ [Open]
+   ↑                              |
+   |                         쿨다운 시간 경과
+   |                              |
+   |                              ↓
+   ←—— 시험 성공 ———————— [Half-Open]
+                                  |
+                             시험 실패
+                                  |
+                                  ↓
+                               [Open]
+</code></pre>
+
+<p>1. <strong>Closed</strong>: Agent가 정상적으로 작업을 처리합니다. 실패가 발생하면 카운터가 올라갑니다. 성공하면 카운터가 0으로 리셋됩니다.</p>
+<p>2. <strong>Open</strong>: 연속 실패가 임계값(threshold)에 도달하면 차단됩니다. 이 상태에서는 새 작업을 시도하지 않습니다.</p>
+<p>3. <strong>Half-Open</strong>: 쿨다운 시간이 지나면 한 건만 시험 삼아 실행합니다. 성공하면 Closed로 돌아가고, 실패하면 다시 Open으로 갑니다.</p>
+
+<p>한 가지 구현 포인트가 있습니다. OpenOrchestrator는 이 세 상태를 <strong>명시적 <code>state</code> 필드로 저장하지 않습니다.</strong> 대신 <code>consecutive_failures</code>(연속 실패 횟수)와 <code>cooldown_until</code>(쿨다운 만료 시각) 두 값으로 상태를 _묵시적으로_ 유도합니다.</p>
+
+<p>- <code>consecutive_failures < 3</code> → <strong>Closed</strong></p>
+<p>- <code>consecutive_failures >= 3</code> AND <code>now < cooldown_until</code> → <strong>Open</strong></p>
+<p>- <code>consecutive_failures >= 3</code> AND <code>now >= cooldown_until</code> → <strong>Half-Open</strong> (다음 사이클에서 한 건 시험 실행)</p>
+
+<p>상태를 필드로 두면 그 필드를 갱신하는 코드가 따로 필요합니다. 시간 기반으로 유도하면 코드가 단순해지고, 시계만 정확하면 일관성이 저절로 유지됩니다.</p>
+
+<h2>OO의 이중 Circuit Breaker 설계</h2>
+
+<p>OpenOrchestrator는 Circuit Breaker를 <strong>두 계층</strong>에 두고 있습니다. 스코프가 다르고, 보호하는 대상도 다릅니다.</p>
+
+<p>| 계층 | 구현 위치 | 스코프 | 상태 파일 |</p>
+<p>|------|----------|-------|----------|</p>
+<p>| <strong>글로벌</strong> | <code>scripts/autonomous/inbox-watcher.py</code> | 파이프라인 전체 — "Wave를 스폰해야 하나?" | <code>tmp/inbox-watcher-state.json</code> (단일 파일) |</p>
+<p>| <strong>프로젝트별</strong> | 각 Wave 실행 | 프로젝트 하나 — "이 프로젝트가 지금 망가졌나?" | <code>state/runtime/circuit/circuit-state-{repo}.json</code> (13개 파일) |</p>
+
+<p>글로벌 계층은 "아예 시작을 막을지"를 결정합니다. 예를 들어 orchestrator 스크립트 자체가 연속으로 죽으면, 새 Wave를 스폰하는 것 자체가 의미가 없으니 inbox-watcher가 멈춥니다.</p>
+
+<p>프로젝트별 계층은 "어느 프로젝트가 문제인지"를 격리합니다. <code>onyourside22</code>에서 3연속 실패가 발생해도, <code>ai-pkm</code>이나 <code>auto-shorts01</code>은 정상 운영됩니다. 장애가 생태계 전체로 번지지 않습니다.</p>
+
+<p>아래에서 두 계층의 실제 코드를 차례로 봅니다.</p>
+
+<h2>계층 1: inbox-watcher의 글로벌 Circuit Breaker</h2>
+
+<p><code>inbox-watcher.py</code>는 주기적으로 inbox를 감시하고, 새 작업이 있으면 Wave를 스폰하는 데몬입니다. 핵심 상수부터 보겠습니다:</p>
+
+<pre><code class="language-python">
+# scripts/autonomous/inbox-watcher.py
+STATE_FILE = OO_ROOT / "tmp" / "inbox-watcher-state.json"
+CIRCUIT_BREAKER_MAX = 3    # 연속 실패 3회에서 차단
+COOLDOWN_SECONDS = 600     # 쿨다운: 10분
+</code></pre>
+
+<p><strong>왜 3회일까요?</strong></p>
+
+<p>1회면 너무 민감합니다. 네트워크 일시 끊김, 파일 시스템 잠금 경합 같은 일시적 오류에도 차단됩니다. 5회면 너무 관대합니다. 구조적 문제(잘못된 설정, 삭제된 리포지토리)인데 5번이나 시도한 후에야 멈춥니다. 3회는 "일시적 오류는 넘기되, 지속적 장애는 빠르게 감지하는" 균형점입니다.</p>
+
+<p>쿨다운이 10분인 이유도 비슷합니다. Git lock 같은 일시적 충돌은 보통 1~2분 안에 해소됩니다. 10분이면 일시적 문제가 해결되기에 충분하고, 구조적 문제라면 10분 후에도 여전히 실패해서 다시 차단됩니다.</p>
+
+<p>이제 실행 루프의 핵심 코드입니다:</p>
+
+<pre><code class="language-python">
+# scripts/autonomous/inbox-watcher.py — run_once()
+def run_once(dry_run: bool = False) -&gt; bool:
+    state = _load_state()
+
+    # Circuit Breaker 확인: Open 상태인가?
+    if state.get("consecutive_failures", 0) &gt;= CIRCUIT_BREAKER_MAX:
+        last_run = state.get("last_run")
+        if last_run:
+            elapsed = (datetime.now(timezone.utc) -
+                       datetime.fromisoformat(last_run)).total_seconds()
+            if elapsed &lt; COOLDOWN_SECONDS:
+                # 아직 쿨다운 중 → 실행 안 함 (Open 상태 유지)
+                log.warning(
+                    f"Circuit breaker active "
+                    f"({state['consecutive_failures']} failures). "
+                    f"Cooldown: {int(COOLDOWN_SECONDS - elapsed)}s remaining."
+                )
+                return False
+            else:
+                # 쿨다운 만료 → Half-Open 진입 (리셋 후 시험 실행)
+                log.info("Circuit breaker cooldown expired, resetting.")
+                state["consecutive_failures"] = 0
+
+    # ... 작업 실행 ...
+    exit_code = trigger_wave(dry_run=dry_run)
+    state["last_run"] = datetime.now(timezone.utc).isoformat()
+
+    if exit_code == 0:
+        # 성공 → Closed 유지, 카운터 리셋
+        state["consecutive_failures"] = 0
+        state["last_spawn_status"] = "spawned"
+    else:
+        # 실패 → 카운터 증가
+        state["consecutive_failures"] = state.get("consecutive_failures", 0) + 1
+        state["last_spawn_status"] = "spawn_failed"
+        if state["consecutive_failures"] &gt;= CIRCUIT_BREAKER_MAX:
+            _try_notify(
+                f"Circuit breaker tripped\n"
+                f"Consecutive failures: {state['consecutive_failures']}"
+            )
+</code></pre>
+
+<p>코드 흐름을 정리하면:</p>
+
+<p>| 단계 | 코드 | 동작 |</p>
+<p>|------|------|------|</p>
+<p>| 1. 상태 확인 | <code>consecutive_failures >= 3</code> | Open이면 쿨다운 확인 |</p>
+<p>| 2. 쿨다운 판단 | <code>elapsed < COOLDOWN_SECONDS</code> | 아직이면 건너뜀, 지났으면 리셋 |</p>
+<p>| 3. 작업 실행 | <code>trigger_wave()</code> | Wave 파이프라인 실행 |</p>
+<p>| 4-a. 성공 시 | <code>consecutive_failures = 0</code> | 카운터 초기화 (Closed) |</p>
+<p>| 4-b. 실패 시 | <code>consecutive_failures += 1</code> | 카운터 증가 → 3 도달하면 알림 |</p>
+
+<h3>글로벌 state 파일 구조</h3>
+
+<pre><code class="language-json">
+{
+  "consecutive_failures": 3,
+  "last_run": "2026-04-12T23:42:15+00:00",
+  "last_spawn_status": "spawn_failed",
+  "last_spawned_at": "2026-04-12T23:41:02+00:00",
+  "processed_files": ["inbox/auto-shorts01/tasks/task_abc.json"]
+}
+</code></pre>
+
+<p>- <code>consecutive_failures</code>: 연속 실패 횟수. 성공하면 0으로 리셋.</p>
+<p>- <code>last_run</code>: 마지막 실행 시각. 쿨다운 계산에 사용.</p>
+<p>- <code>last_spawn_status</code>: 마지막 Wave 스폰 결과 (<code>spawned</code> 또는 <code>spawn_failed</code>).</p>
+<p>- <code>processed_files</code>: 이미 처리한 inbox 작업 파일 목록.</p>
+
+<p>이게 파이프라인 전체의 "바깥 차단기"입니다.</p>
+
+<h2>계층 2: 프로젝트별 Circuit State</h2>
+
+<p>Wave 파이프라인이 개별 프로젝트를 실행할 때마다, 그 프로젝트의 실패 상태를 별도 파일에 기록합니다.</p>
+
+<p><strong>경로</strong>: <code>state/runtime/circuit/circuit-state-{repo}.json</code></p>
+
+<p>예를 들어 <code>state/runtime/circuit/circuit-state-openorchestrator.json</code>의 실제 내용:</p>
+
+<pre><code class="language-json">
+{
+  "consecutive_failures": 1,
+  "last_failure_at": "2026-04-20T08:44:16.2249694+09:00",
+  "cooldown_until": "2026-04-20T08:46:16.2231652+09:00",
+  "daily_sessions": 1,
+  "daily_tokens_estimated": 180000,
+  "wp_retry_count": 0,
+  "daily_date": "2026-04-20",
+  "last_wp_id": "wave1-task1-openorchestrator.txt"
+}
+</code></pre>
+
+<p>글로벌 state와 필드가 미묘하게 다릅니다. 이 계층은 실패 추적(<code>consecutive_failures</code>, <code>last_failure_at</code>, <code>cooldown_until</code>)뿐 아니라 <strong>예산 추적</strong>(<code>daily_sessions</code>, <code>daily_tokens_estimated</code>)도 겸합니다. 4편에서 언급한 "일일 세션 80개, 토큰 10M" 상한이 여기에 기록됩니다.</p>
+
+<p>중요한 점: <strong>여기에도 <code>state</code> 필드는 없습니다.</strong> Open 여부는 동일한 규칙으로 유도합니다 — <code>consecutive_failures >= 3</code> 이면서 <code>cooldown_until</code>이 미래면 Open, 아니면 Closed.</p>
+
+<h2>Telegram 알림: 사람이 개입해야 할 시점</h2>
+
+<p>Circuit Breaker가 발동하면 Telegram으로 알림이 갑니다.</p>
+
+<pre><code class="language-python">
+# scripts/telegram/notify.py
+def notify_circuit_breaker(project: str, failures: int) -&gt; bool:
+    return send(
+        f"&lt;b&gt;Circuit breaker tripped&lt;/b&gt;\n"
+        f"Project: {project}\n"
+        f"Consecutive failures: {failures}"
+    )
+</code></pre>
+
+<p>실제 Telegram에는 이런 메시지가 옵니다:</p>
+
+<pre><code>
+Circuit breaker tripped
+Project: onyourside22
+Consecutive failures: 3
+</code></pre>
+
+<p>이 알림을 받으면 사람은 두 가지를 판단합니다:</p>
+
+<p>1. <strong>일시적 문제인가?</strong> (Git lock, 네트워크 끊김) → 원인 해소 후 쿨다운 대기 또는 수동 리셋</p>
+<p>2. <strong>구조적 문제인가?</strong> (설정 오류, 삭제된 리소스) → 원인 수정 후 수동 리셋</p>
+
+<p>Circuit Breaker의 핵심 가치가 여기 있습니다. Agent가 문제를 무한 반복하는 대신, <strong>"나 문제 있어요, 사람이 봐주세요"</strong>라고 스스로 알리는 것입니다. 4편에서 다뤘던 Wave Orchestration은 작업을 "빠르게" 처리하는 시스템이었다면, Circuit Breaker는 실패를 "안전하게" 처리하는 시스템입니다.</p>
+
+<h2>13개 Agent 통합 대시보드</h2>
+
+<p>Agent가 하나라면 Telegram 알림만으로 충분합니다. 하지만 OpenOrchestrator는 13개 Agent를 동시에 운영합니다. 어떤 Agent가 정상이고, 어떤 Agent가 차단 상태인지 한눈에 보려면 대시보드가 필요합니다.</p>
+
+<p><code>apps/kernel/app/routers/agents.py</code>가 이 역할을 합니다.</p>
+
+<h3>Agent 레지스트리</h3>
+
+<p>13개 Agent가 하드코딩된 레지스트리에 등록되어 있습니다:</p>
+
+<pre><code class="language-python">
+# apps/kernel/app/routers/agents.py
+AGENT_REGISTRY = [
+    {"name": "Brain",  "repo": "ai-pkm",       "role": "Knowledge/Strategy SSOT"},
+    {"name": "Mouth",  "repo": "auto-shorts01", "role": "Content generation"},
+    {"name": "Hands",  "repo": "onyourside22",  "role": "Strategy live/paper trading"},
+    # ... 총 13개
+]
+</code></pre>
+
+<p>각 Agent는 이름(별명), 리포지토리, 역할을 가집니다. "Brain"은 지식 관리, "Mouth"는 콘텐츠 생성, "Hands"는 매매 실행을 담당합니다. 사람 몸의 기관처럼 각자 역할이 다른 Agent들이 하나의 생태계를 이룹니다.</p>
+
+<h3>Circuit State 로딩과 상태 유도</h3>
+
+<p>프로젝트별 state 파일을 읽어서 위에서 정리한 규칙대로 상태를 유도합니다:</p>
+
+<pre><code class="language-python">
+# apps/kernel/app/routers/agents.py
+CIRCUIT_BREAKER_MAX = 3  # inbox-watcher.py와 동일
+
+def _load_circuit_state(repo: str) -&gt; dict | None:
+    """프로젝트별 circuit breaker 상태 파일 로딩"""
+    path = (
+        settings.oo_root
+        / "state" / "runtime" / "circuit"
+        / f"circuit-state-{repo}.json"
+    )
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def _circuit_to_status(state: dict | None) -&gt; AgentStatus:
+    """명시적 state 필드가 없으므로 두 값으로 Open 여부 유도."""
+    if state is None:
+        return AgentStatus.unknown
+    failures = state.get("consecutive_failures", 0)
+    if failures &lt; CIRCUIT_BREAKER_MAX:
+        return AgentStatus.idle               # Closed
+    cooldown_until_str = state.get("cooldown_until")
+    if not cooldown_until_str:
+        return AgentStatus.idle
+    cooldown_until = _parse_iso_tolerant(cooldown_until_str)
+    if cooldown_until is None:
+        return AgentStatus.circuit_open       # 파싱 실패 시 안전쪽
+    now = datetime.now(cooldown_until.tzinfo or timezone.utc)
+    return (
+        AgentStatus.circuit_open              # Open
+        if now &lt; cooldown_until
+        else AgentStatus.idle                 # Half-Open 경계 — 다음 사이클에서 시험 실행
+    )
+</code></pre>
+
+<p>핵심은 <strong>상태를 필드로 저장하지 않고 두 숫자(<code>consecutive_failures</code>, <code>cooldown_until</code>)로 유도한다</strong>는 점입니다. 파일을 쓰는 쪽(wave pipeline)과 읽는 쪽(이 API)이 "상태 이름"을 일치시킬 필요가 없습니다. 규칙만 양쪽에서 같으면 됩니다.</p>
+
+<h3>목록 API: 전체 Agent 한눈에 보기</h3>
+
+<pre><code>
+GET /api/agents
+</code></pre>
+
+<pre><code class="language-json">
+[
+  {
+    "name": "Brain",
+    "repo": "ai-pkm",
+    "role": "Knowledge/Strategy SSOT",
+    "status": "running",
+    "active_wp": "WP-20260419-01",
+    "circuit_state": {
+      "consecutive_failures": 0,
+      "last_failure_at": null,
+      "cooldown_until": null,
+      "daily_sessions": 3,
+      "daily_tokens_estimated": 540000
+    }
+  },
+  {
+    "name": "Hands",
+    "repo": "onyourside22",
+    "role": "Strategy live/paper trading",
+    "status": "circuit_open",
+    "active_wp": null,
+    "circuit_state": {
+      "consecutive_failures": 3,
+      "last_failure_at": "2026-04-20T08:44:16+09:00",
+      "cooldown_until": "2026-04-20T08:54:16+09:00",
+      "daily_sessions": 5,
+      "daily_tokens_estimated": 820000
+    }
+  }
+]
+</code></pre>
+
+<p>이 API 하나로 13개 Agent의 상태, 현재 작업, 차단 여부, 예산 소진율을 한 번에 확인할 수 있습니다.</p>
+
+<h3>수동 리셋 API: 차단 해제</h3>
+
+<p>Circuit Breaker가 발동한 후 원인을 해결했다면, 수동으로 차단을 해제할 수 있습니다:</p>
+
+<pre><code>
+POST /api/agents/{repo}/reset-circuit
+</code></pre>
+
+<pre><code class="language-python">
+@router.post("/{repo}/reset-circuit")
+async def reset_circuit(repo: str):
+    path = (
+        settings.oo_root
+        / "state" / "runtime" / "circuit"
+        / f"circuit-state-{repo}.json"
+    )
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"No circuit state for '{repo}'")
+
+    state = json.loads(path.read_text(encoding="utf-8"))
+    state["consecutive_failures"] = 0       # 실패 카운터 초기화
+    state["cooldown_until"] = None          # 쿨다운 해제
+    path.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
+    return {
+        "status": "reset",
+        "repo": repo,
+        "reset_fields": ["consecutive_failures", "cooldown_until"]
+    }
+</code></pre>
+
+<p>리셋은 <strong>두 값만 건드립니다</strong>. <code>consecutive_failures</code>를 0으로 돌리고, <code>cooldown_until</code>을 비웁니다. 다른 필드(일일 예산, 마지막 WP 기록)는 그대로 둬서 운영 이력을 보존합니다.</p>
+
+<p>Telegram에서 차단 알림을 받고, 원인을 확인하고, API 한 번 호출로 복구합니다. 전체 시스템을 재시작할 필요가 없습니다.</p>
+
+<h2>Wave Orchestration과의 통합: 삼중 방어선</h2>
+
+<p>4편에서 다뤘던 Wave Orchestration과 Circuit Breaker는 서로 맞물려 작동합니다.</p>
+
+<p>| 방어선 | 담당 | 동작 |</p>
+<p>|--------|------|------|</p>
+<p>| <strong>외곽</strong> | inbox-watcher (글로벌) | 연속 3회 스폰 실패 → 감시자 자체가 쉰다 |</p>
+<p>| <strong>중간</strong> | 프로젝트별 circuit-state | 특정 프로젝트 3회 실패 → 그 프로젝트만 격리 |</p>
+<p>| <strong>내측</strong> | Wave 게이트 (orchestrator) | Wave 1 산출물 누락 → Wave 2 차단 (4편 참조) |</p>
+
+<p>외곽 방어선(inbox-watcher)은 <strong>"아예 시작하지 마라"</strong>입니다. orchestrator 스크립트 자체가 고장났거나, 전체 Wave 파이프라인이 3회 연속 스폰 실패면 감시자가 스스로 멈춥니다.</p>
+
+<p>중간 방어선(프로젝트별 circuit-state)은 <strong>"이 프로젝트는 스킵해라"</strong>입니다. <code>onyourside22</code>에서 3회 연속 실패가 나도 <code>ai-pkm</code>과 <code>auto-shorts01</code>은 계속 돕니다. 장애가 옆으로 번지지 않습니다.</p>
+
+<p>내측 방어선(Wave 게이트)은 <strong>"이 파이프라인 단계는 건너뛰어라"</strong>입니다. Wave 1이 산출해야 할 파일이 없으면 Wave 2를 시작하지 않습니다. 쓰레기 데이터가 하류로 흐르는 것을 막습니다.</p>
+
+<p>이 세 방어선이 합쳐지면 이런 복구 시나리오가 가능합니다:</p>
+
+<pre><code>
+1. Agent 세션 실패 → exit-report.json에 "failed" 기록
+2. 같은 프로젝트 3회 연속 → circuit-state-{repo}.json → consecutive_failures=3 + cooldown_until=+10분
+3. /api/agents 대시보드에서 "circuit_open" 표시
+4. Telegram 알림 수신 → 사람이 원인 확인
+5. 원인 수정 → POST /api/agents/{repo}/reset-circuit → 두 필드 리셋
+6. 다음 inbox-watcher 사이클 → 정상 실행 재개
+</code></pre>
+
+<h2>Before vs After</h2>
+
+<p>| | Circuit Breaker 없이 | Circuit Breaker 도입 후 |</p>
+<p>|---|---|---|</p>
+<p>| 반복 실패 | 같은 에러를 수십 번 재시도 → 토큰 낭비 | 3회 후 자동 정지 → 토큰 보호 |</p>
+<p>| 장애 인지 | 사람이 로그를 열어봐야 발견 | Telegram 알림 즉시 수신 |</p>
+<p>| 복구 방법 | 전체 시스템 재시작 | API 1회 호출 (프로젝트 단위) |</p>
+<p>| 다른 Agent 영향 | 실패한 Agent가 리소스 점유 | 차단된 Agent만 격리, 나머지 정상 운영 |</p>
+<p>| 장애 이력 | 로그에 흩어져 있음 | circuit-state JSON에 구조화 보존 |</p>
+<p>| 시스템 신뢰도 | 사람이 항상 감시해야 함 | 자율 운영 + 필요시에만 개입 |</p>
+
+<h2>내 시스템에 적용하려면</h2>
+
+<p>Circuit Breaker는 구현이 단순한 만큼 어디든 적용할 수 있습니다.</p>
+
+<p><strong>1단계: 실패 카운터 추가.</strong> 외부 서비스 호출이나 Agent 실행에 <code>consecutive_failures</code> 변수를 추가합니다. 성공하면 0으로 리셋, 실패하면 +1. 이것만으로 기본 뼈대가 됩니다.</p>
+
+<p><strong>2단계: 임계값과 쿨다운 설정.</strong> 임계값은 3~5회가 적당합니다. 쿨다운은 작업 특성에 맞춰 설정합니다. API 호출이면 30초~1분, 배치 작업이면 5~10분이 일반적입니다.</p>
+
+<p><strong>3단계: 알림 연결.</strong> 차단 발동 시 알림을 보내세요. Slack, Telegram, 이메일 — 채널은 무엇이든 됩니다. 핵심은 "사람이 몰라서 방치되는 시간"을 줄이는 것입니다.</p>
+
+<p><strong>4단계: 리셋 API.</strong> 상태 파일이나 데이터베이스의 값을 초기화하는 엔드포인트를 만듭니다. 전체 재시작 없이 프로젝트 단위로 복구할 수 있어야 합니다.</p>
+
+<p><strong>(심화) 5단계: 계층화.</strong> 시스템이 커지면 Circuit Breaker를 하나로 두지 마세요. 글로벌 하나, 서비스별 하나 — 두 계층이면 장애가 옆으로 번지지 않습니다.</p>
+
+<h2>정리</h2>
+
+<p>핵심 세 줄입니다.</p>
+
+<p>- <strong>3회면 충분하다.</strong> 일시적 오류를 넘기면서도 구조적 장애를 빠르게 감지하는 균형점입니다. 1회는 너무 민감하고, 5회는 너무 관대합니다.</p>
+<p>- <strong>상태는 필드가 아니라 숫자로 유도할 수 있다.</strong> <code>consecutive_failures</code>와 <code>cooldown_until</code> 두 값이면 Closed/Open/Half-Open이 자동으로 계산됩니다. 필드를 갱신하는 코드를 따로 유지할 필요가 없습니다.</p>
+<p>- <strong>격리가 핵심이다.</strong> 13개 Agent 중 하나가 차단되어도 나머지 12개는 정상 운영됩니다. 프로젝트 단위 격리가 전체 시스템의 복원력(Resilience)을 만듭니다.</p>
+
+<p>다음 편에서는 AWS AI League 대회 준비를 위해 새 프로젝트를 스마트폰 기획부터 자동 개발까지 OO 생태계로 띄운 이야기를 다룹니다.</p>
+
+<hr>
+
+<p>*이 글은 OpenOrchestrator 생태계의 auto-shorts01 파이프라인과 Claude를 활용하여 작성되었습니다.*</p>
+    </article>
+
+    <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 0.85rem;">
+        <p>OO 기술 블로그 &mdash; AI Agent 생태계 구축기</p>
+        <p>원본: <a href="https://onyourside22.tistory.com">https://onyourside22.tistory.com</a></p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# OO Tech Blog — GitHub Pages Mirror
+# Canonical origin: https://onyourside22.tistory.com
+
+User-agent: *
+Allow: /
+
+Sitemap: https://edolramba.github.io/sitemap.xml

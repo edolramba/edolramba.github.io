@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Orchestration: 퇴근 후 2시간에 53개 작업을 자동 처리한 방법 — OO 기술 블로그</title>
+    <meta name="description" content="12개 AI 프로젝트에 쌓인 53개 작업을 Wave(파도) 단위로 묶어 병렬 실행하는 배치 오케스트레이션 시스템의 설계, 구현, 실전 실행 기록(34건 완료, 129분, 7.92M 토큰)을 다룹니다.">
+    <meta name="keywords" content="AI, Agentic-AI, Wave-Orchestration, LLM, OpenOrchestrator, DAG, 자동화, 배치실행">
+    <link rel="canonical" href="https://onyourside22.tistory.com">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Wave Orchestration: 퇴근 후 2시간에 53개 작업을 자동 처리한 방법">
+    <meta property="og:description" content="12개 AI 프로젝트에 쌓인 53개 작업을 Wave(파도) 단위로 묶어 병렬 실행하는 배치 오케스트레이션 시스템의 설계, 구현, 실전 실행 기록(34건 완료, 129분, 7.92M 토큰)을 다룹니다.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://onyourside22.tistory.com">
+    <meta property="og:site_name" content="OO 기술 블로그">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Wave Orchestration: 퇴근 후 2시간에 53개 작업을 자동 처리한 방법">
+    <meta name="twitter:description" content="12개 AI 프로젝트에 쌓인 53개 작업을 Wave(파도) 단위로 묶어 병렬 실행하는 배치 오케스트레이션 시스템의 설계, 구현, 실전 실행 기록(34건 완료, 129분, 7.92M 토큰)을 다룹니다.">
+
+    <!-- Article metadata -->
+    <meta property="article:published_time" content="2026-04-16">
+    <meta property="article:section" content="Vibe Coding">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            line-height: 1.8;
+            color: #333;
+        }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.5rem; margin-top: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.3rem; }
+        h3 { font-size: 1.2rem; margin-top: 1.5rem; }
+        pre { background: #f6f8fa; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+        code { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+        blockquote { border-left: 4px solid #dfe2e5; margin: 1rem 0; padding: 0.5rem 1rem; color: #6a737d; }
+        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        th, td { border: 1px solid #dfe2e5; padding: 0.5rem; text-align: left; }
+        th { background: #f6f8fa; }
+        .meta { color: #666; font-size: 0.9rem; margin-bottom: 2rem; }
+        .canonical-notice { background: #fff3cd; padding: 0.75rem; border-radius: 4px; margin-bottom: 2rem; font-size: 0.85rem; }
+        a { color: #0366d6; }
+        nav { margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+    <nav><a href="index.html">&larr; OO 기술 블로그 시리즈 목록</a></nav>
+
+    <article>
+        <h1>Wave Orchestration: 퇴근 후 2시간에 53개 작업을 자동 처리한 방법</h1>
+        <div class="meta">
+            <time datetime="2026-04-16">2026-04-16</time> &middot;
+            10분 읽기 &middot;
+            AI, Agentic-AI, Wave-Orchestration, LLM, OpenOrchestrator
+        </div>
+
+        <div class="canonical-notice">
+            이 글의 원본은 <a href="https://onyourside22.tistory.com">Tistory 블로그</a>에서 확인할 수 있습니다.
+        </div>
+
+        <blockquote>**OpenOrchestrator 시리즈 4편** | 2026.04</blockquote>
+<p>></p>
+<blockquote>이 글을 읽으면 세 가지를 알게 됩니다:</blockquote>
+<blockquote>- 12개 프로젝트에 쌓인 밀린 작업을 어떻게 자동으로 발견하는지</blockquote>
+<blockquote>- 의존성이 있는 작업을 Wave(파도) 단위로 묶어 병렬 실행하는 방법</blockquote>
+<blockquote>- 실제로 53개 작업을 8개 Wave로 돌린 실행 기록과 숫자</blockquote>
+
+<hr>
+
+<h2>"오늘 뭐 해야 하지?" — 12개 프로젝트의 현실</h2>
+
+<p>2편에서 OpenOrchestrator(이하 OO)가 12개 AI 프로젝트를 관리하는 메타 시스템이라고 소개했습니다. 3편에서는 도메인별로 자율도를 다르게 설정하는 방법을 다뤘고요.</p>
+
+<p>그런데 한 가지 질문이 남아 있었습니다.</p>
+
+<p><strong>"12개 프로젝트에 작업이 각각 3~5개씩 쌓여 있으면, 어떻게 처리하죠?"</strong></p>
+
+<p>퇴근 후 시간은 2~3시간입니다. 프로젝트를 하나씩 열어서 "오늘 뭐 해야 하지?"를 확인하고, 우선순위를 머릿속으로 정하고, 순서대로 하나씩 처리하면 — 하루에 3~5개 작업이 한계입니다.</p>
+
+<p>식당에 비유하면 이런 상황입니다. 주방에 주문서 53장이 쌓여 있는데, 셰프(사람) 한 명이 주문서를 하나씩 읽고, 재료를 찾고, 요리하고, 서빙까지 직접 합니다. 당연히 느립니다.</p>
+
+<p>해결책은 명확합니다. <strong>주문서를 코스별로 묶고, 여러 요리사가 동시에 처리하면 됩니다.</strong> 이것이 Wave Orchestration의 핵심 아이디어입니다.</p>
+
+<h2>Wave Orchestration이란</h2>
+
+<p>Wave Orchestration은 세 단계로 작동합니다:</p>
+
+<p>| 단계 | 담당 | 하는 일 |</p>
+<p>|------|------|--------|</p>
+<p>| 1. 스캔 | wave-scanner.py | 전 프로젝트에서 밀린 작업 수집 + 의존성 DAG 구축 |</p>
+<p>| 2. 실행 | orchestrator.ps1 | Wave 순서대로 병렬 실행 + 게이트 검증 |</p>
+<p>| 3. 세션 | controller.ps1 | 개별 Agent 세션 관리 (1작업 = 1세션) |</p>
+
+<p>식당 비유를 이어가면:</p>
+<p>- <strong>wave-scanner.py</strong> = 주문서 정리 담당. 주문서 53장을 읽고 "샐러드류는 1코스, 메인은 2코스, 디저트는 3코스" 이렇게 코스(Wave)별로 묶습니다.</p>
+<p>- <strong>orchestrator.ps1</strong> = 주방장. 1코스 주문을 3명의 요리사에게 동시에 배분하고, 1코스가 끝나면 2코스로 넘어갑니다.</p>
+<p>- <strong>controller.ps1</strong> = 각 요리사. 배정받은 주문 하나를 처리하고 결과를 보고합니다.</p>
+
+<h2>Step 1: 스캔 — 밀린 작업을 자동으로 찾기</h2>
+
+<p>wave-scanner.py는 <strong>5개 소스</strong>에서 작업을 수집합니다. 사람이 프로젝트를 하나씩 열어볼 필요가 없습니다.</p>
+
+<p>| # | 소스 | 설명 |</p>
+<p>|---|------|------|</p>
+<p>| 1 | master-wbs.md | OO 대시보드에 등록된 미완료 항목 |</p>
+<p>| 2 | shared_data/inbox/*/tasks/ | 다른 Agent가 보낸 작업 요청 |</p>
+<p>| 3 | ai-pkm extract_actions | 지식 관리 시스템에서 추출한 액션 아이템 |</p>
+<p>| 4 | HITL resume signals | 사람이 "완료했어" 시그널을 보낸 대기 작업 |</p>
+<p>| 5 | 14개 프로젝트 로컬 WBS | 각 프로젝트 내부 작업 목록 직접 스캔 |</p>
+
+<p>소스 5가 핵심입니다. OO 대시보드(master-wbs.md)는 프로젝트별 요약만 담고 있고, 세부 작업은 각 프로젝트의 로컬 WBS에 있습니다. wave-scanner는 14개 프로젝트 폴더를 직접 순회하면서 마크다운 테이블을 파싱합니다.</p>
+
+<p>수집이 끝나면 중복을 제거합니다. 같은 작업이 대시보드와 로컬 WBS에 동시에 있을 수 있으니까요.</p>
+
+<p>실제 실행 기록:</p>
+
+<pre><code>
+전체 수집: 116건
+중복 제거 후: 53건
+소스별 분포:
+  - OO 대시보드: 24건
+  - 로컬 WBS: 29건 (소스 5에서 추가 발견)
+  - inbox: 0건
+</code></pre>
+
+<p>소스 5 도입 전에는 대시보드에 등록된 작업만 스캔했습니다. 도입 후 수집 범위가 <strong>거의 2배</strong>로 늘었습니다. 각 프로젝트가 자체적으로 관리하는 작업까지 잡아내는 거죠.</p>
+
+<h3>의존성 DAG 구축</h3>
+
+<p>수집된 53개 작업을 바로 병렬로 돌릴 수는 없습니다. 작업 간 의존성이 있기 때문입니다.</p>
+
+<p>예를 들어, 하승훈 매매기법 파이프라인은 이런 순서입니다:</p>
+
+<pre><code>
+Wave 1: onyourside22 — 매매일지 추출
+           ↓ 산출물: daily-trade-report.json
+Wave 2A: ai-pkm — 지식 인제스트      (2A와 2B는 병렬)
+Wave 2B: auto-shorts01 — 콘텐츠 생성  (2A와 2B는 병렬)
+           ↓
+Wave 3: auto-shorts01 — 블로그 게시
+</code></pre>
+
+<p>Wave 1의 매매일지가 없으면 Wave 2의 인제스트와 콘텐츠 생성이 불가능합니다. 하지만 Wave 2A(인제스트)와 Wave 2B(콘텐츠 생성)는 서로 독립이니까 동시에 돌릴 수 있습니다.</p>
+
+<p>wave-scanner는 이런 의존성을 분석해서 DAG(방향 비순환 그래프, Directed Acyclic Graph — 순환 없는 방향 그래프)를 만들고, 같은 깊이(depth)의 노드를 하나의 Wave로 묶습니다.</p>
+
+<p>결과물은 <code>wave-plan.json</code>입니다:</p>
+
+<pre><code class="language-json">
+{
+  "created_at": "2026-04-12T22:15:00",
+  "total_tasks": 53,
+  "sources": {
+    "wbs_pending": 24,
+    "local_wbs": 29
+  },
+  "waves": [
+    {
+      "wave_id": 1,
+      "tasks": [
+        {
+          "project": "openorchestrator",
+          "summary": "[INT-P35-A] Codex plan-review 오프라인 fallback",
+          "agent_type": "claude_code"
+        },
+        {
+          "project": "onyourside22",
+          "summary": "[HSH-09] 매매일지 PDF → 구조화 JSON",
+          "agent_type": "claude_code"
+        }
+      ]
+    },
+    {
+      "wave_id": 2,
+      "tasks": ["... Wave 1 산출물에 의존하는 작업들"]
+    }
+  ]
+}
+</code></pre>
+
+<h2>Step 2: 실행 — Wave 단위 병렬 처리</h2>
+
+<p>orchestrator.ps1이 wave-plan.json을 읽고 실행합니다. 핵심 루프는 이렇습니다:</p>
+
+<pre><code>
+foreach (Wave in Plan) {
+  1. STOP 파일 확인 → 있으면 즉시 중단
+  2. 일일 예산 확인 (세션 80개, 토큰 10M)
+  3. Wave 내 작업을 최대 3개씩 병렬 실행
+  4. 전부 끝나면 Wave 게이트 검증
+  5. 게이트 통과 → 다음 Wave / 실패 → 중단
+}
+</code></pre>
+
+<h3>병렬 실행의 현실적 제약</h3>
+
+<p>"왜 3개만 동시에?" 라고 물을 수 있습니다. 이유는 세 가지입니다:</p>
+
+<p>첫째, <strong>토큰 비용</strong>. Claude Code CLI 세션 하나당 평균 15만 토큰을 소비합니다. 10개를 동시에 돌리면 150만 토큰이 한 번에 빠져나갑니다. 일일 예산(10M 토큰)을 금방 소진합니다.</p>
+
+<p>둘째, <strong>로컬 자원</strong>. 각 세션은 별도 프로세스입니다. 128GB RAM이라도 Git 작업 + 파일 I/O + API 호출이 동시에 10개 이상 돌면 병목이 생깁니다.</p>
+
+<p>셋째, <strong>디버깅</strong>. 동시에 너무 많은 세션이 돌면, 문제가 생겼을 때 어떤 세션에서 발생한 건지 추적하기 어렵습니다.</p>
+
+<pre><code class="language-json">
+{
+  "max_concurrent": 3,
+  "max_turns": 50,
+  "wall_clock_minutes": 30,
+  "orchestrator_wall_clock_minutes": 120,
+  "ecosystem": {
+    "global_max_daily_sessions": 80,
+    "global_max_daily_tokens": 10000000
+  }
+}
+</code></pre>
+
+<p>이 설정은 <code>session-limits.json</code>에서 관리합니다. 개별 세션은 최대 30분, orchestrator 전체는 최대 120분입니다. 일일 세션 수와 토큰 총량도 상한이 있습니다.</p>
+
+<h3>Wave 게이트 — "다음 코스 나가도 되나요?"</h3>
+
+<p>식당에서 1코스가 끝나야 2코스를 내보내듯, Wave 사이에 검증 게이트가 있습니다.</p>
+
+<p>| 게이트 | 확인 내용 | 실패 시 |</p>
+<p>|--------|----------|--------|</p>
+<p>| 산출물 존재 | 이전 Wave에서 만들어야 할 파일이 존재하는가? | 1회 재시도 → 실패 시 중단 |</p>
+<p>| 스키마 정합 | 산출물 JSON이 약속된 형식인가? | 재시도 → 중단 |</p>
+<p>| Git 정리 | 변경사항이 커밋되고 working tree가 깨끗한가? | 수동 정리 |</p>
+<p>| inbox 전달 | 다음 Wave 프로젝트의 inbox에 작업 파일이 도착했는가? | 수동 생성 |</p>
+
+<p>게이트가 없으면 어떻게 될까요? Wave 1에서 매매일지 추출이 실패했는데 Wave 2가 시작되면, ai-pkm이 빈 데이터를 인제스트합니다. 쓰레기가 파이프라인을 타고 흘러갑니다. 게이트는 이걸 막습니다.</p>
+
+<h2>Step 3: 개별 세션 — 1작업 = 1세션</h2>
+
+<p>controller.ps1은 각 작업을 독립된 Agent 세션으로 실행합니다. 핵심 원칙은 <strong>"1WP = 1세션"</strong>입니다.</p>
+
+<p>WP(Work Packet, 작업 문서)에는 목표와 완료 기준이 적혀 있습니다. controller는 이 정보를 자동으로 추출해서 Agent 프롬프트에 주입합니다.</p>
+
+<pre><code>
+=== Completion Contract (from Work Packet) ===
+Objective: 매매일지 PDF에서 종목, 매수/매도, 수량, 가격을 구조화 JSON으로 추출
+Acceptance Criteria:
+- 추출 정확도 95% 이상
+- 출력: shared_data/outbox/daily-trade-report-{date}.json
+- 스키마: trade_journal_v1 준수
+=== End Completion Contract ===
+</code></pre>
+
+<p>Agent는 이 계약을 읽고 작업을 수행합니다. 완료되면 <code>exit-report.json</code>을 남기고 세션이 종료됩니다. orchestrator는 이 리포트를 수거해서 <code>wave-result.json</code>에 집계합니다.</p>
+
+<h2>실전 기록: 53개 작업, 8개 Wave, 129분</h2>
+
+<p>2026년 4월 12일 밤, 실제로 Wave Orchestration을 전체 규모로 실행했습니다. 결과를 숫자로 보겠습니다.</p>
+
+<h3>실행 개요</h3>
+
+<p>| 항목 | 수치 |</p>
+<p>|------|------|</p>
+<p>| 수집된 작업 | 116건 (중복 제거 후 53건) |</p>
+<p>| Wave 수 | 8개 |</p>
+<p>| 실행 시간 | 129분 (120분 상한 도달) |</p>
+<p>| 완료된 작업 | ~34건 |</p>
+<p>| 부분 완료 | ~12건 |</p>
+<p>| 미실행 (시간 초과) | Wave 5~8 |</p>
+<p>| 투입 세션 수 | 44/80 (일일 한도의 55%) |</p>
+<p>| 소비 토큰 | 7.92M/10M (79.2%) |</p>
+<p>| Circuit Breaker 발동 | 1회 |</p>
+
+<h3>처리된 프로젝트 (8개 동시)</h3>
+
+<p>| 프로젝트 | 처리 작업 수 | 대표 작업 |</p>
+<p>|----------|-------------|----------|</p>
+<p>| openorchestrator | 12 | Codex plan-review fallback, 문서 정비 |</p>
+<p>| onyourside22 | 5 | 매매일지 PDF 구조화 |</p>
+<p>| ai-pkm | 3 | 지식 인제스트, 하승훈 기법 파싱 |</p>
+<p>| auto-shorts01 | 2 | 블로그 어댑터, 카페 자동 게시 |</p>
+<p>| company-wide-rca | 3 | RCA Agent 문서 정비 |</p>
+<p>| agentic-ops | 1 | AgenticOps 프로토콜 정리 |</p>
+<p>| gbc-data | 1 | Agent Trace 설정 |</p>
+<p>| stock-api-crawling | 2 | 하승훈 강의 트레이스 |</p>
+
+<p>한 사람이 수동으로 했다면 하루 3~5개가 한계인 작업량을, <strong>2시간 만에 34개 완료</strong>했습니다.</p>
+
+<h3>실패에서 배운 것</h3>
+
+<p>완벽하지는 않았습니다.</p>
+
+<p><strong>Circuit Breaker 1회 발동</strong>: 한 프로젝트에서 Git lock 파일 충돌이 3회 연속 발생해 자동 정지됐습니다. circuit breaker가 없었다면 같은 에러를 무한 반복했을 겁니다.</p>
+
+<p><strong>120분 상한 도달</strong>: Wave 5~8은 시간이 부족해서 실행하지 못했습니다. 다음 날 이어서 처리했습니다. 상한이 없으면 밤새 돌아가면서 토큰 예산을 전부 소진할 수 있으니, 이건 의도된 제한입니다.</p>
+
+<p><strong>부분 완료 12건</strong>: Agent가 작업을 시작했지만 완료 기준을 100% 충족하지 못한 경우입니다. 주로 외부 API 연동이나 사람 승인이 필요한 작업이었습니다. 이런 작업은 "park" 상태로 전환되어 다음 스캔에서 다시 잡힙니다.</p>
+
+<h2>Before vs After</h2>
+
+<p>| | 수동 운영 | Wave Orchestration |</p>
+<p>|---|---|---|</p>
+<p>| 작업 발견 | 프로젝트 12개를 일일이 열어서 확인 | 5개 소스 자동 스캔 (30초) |</p>
+<p>| 우선순위 | 사람 기억과 감에 의존 | 의존성 DAG 자동 정렬 |</p>
+<p>| 실행 방식 | 하나씩 순차 처리 | Wave 내 3개 병렬 |</p>
+<p>| 안전장치 | 사람이 지켜보기 | Circuit Breaker + STOP 파일 + 일일 예산 |</p>
+<p>| 2시간 처리량 | 3~5개 작업 | 34개 완료 (약 10배) |</p>
+<p>| 실패 처리 | 사람이 기억해두고 나중에 | 자동 park → 다음 스캔에서 재수집 |</p>
+
+<h2>내 시스템에 적용하려면</h2>
+
+<p>Wave Orchestration 전체를 한 번에 구축할 필요는 없습니다. 단계별로 접근하면 됩니다.</p>
+
+<p><strong>1단계: 작업 목록 표준화</strong>. 프로젝트별로 "밀린 작업" 목록을 마크다운 테이블 하나로 관리합니다. 이것만으로도 "오늘 뭐 해야 하지?"가 사라집니다.</p>
+
+<p><strong>2단계: 스캔 자동화</strong>. 여러 프로젝트의 작업 목록을 한 번에 읽는 스크립트를 만듭니다. wave-scanner처럼 거창할 필요 없이, 마크다운 파일 몇 개를 파싱하는 정도면 충분합니다.</p>
+
+<p><strong>3단계: 병렬 실행</strong>. 독립적인 작업 2~3개를 동시에 Agent에게 맡겨봅니다. 이때 반드시 일일 예산 상한과 STOP 파일(kill switch)을 먼저 설정하세요. 안전장치 없는 병렬 실행은 위험합니다.</p>
+
+<p><strong>4단계: 게이트 도입</strong>. 작업 간 의존성이 있다면, 이전 작업의 산출물이 존재하는지 확인하는 검증 로직을 추가합니다.</p>
+
+<h2>정리</h2>
+
+<p>핵심 세 줄입니다:</p>
+
+<p>- <strong>스캔이 먼저다.</strong> 밀린 작업을 자동으로 찾지 못하면 병렬 실행도 의미가 없습니다. 5개 소스 스캔이 Wave Orchestration의 절반입니다.</p>
+<p>- <strong>Wave는 의존성의 단위다.</strong> 같은 Wave 안의 작업은 병렬, Wave 사이에는 게이트. 이 구조가 "빠르지만 안전한" 실행을 만듭니다.</p>
+<p>- <strong>예산 없는 자동화는 자동 파괴다.</strong> 세션 수, 토큰, 시간 — 세 가지 상한이 없으면 Agent가 밤새 돌면서 리소스를 소진합니다.</p>
+
+<p>다음 편에서는 Wave 실행 중 Agent가 실패했을 때 어떻게 자동으로 멈추고 복구하는지 — <strong>Circuit Breaker 패턴</strong>을 다룹니다.</p>
+
+<hr>
+
+<p>*이 글은 OpenOrchestrator 생태계의 auto-shorts01 파이프라인과 Claude를 활용하여 작성되었습니다.*</p>
+    </article>
+
+    <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 0.85rem;">
+        <p>OO 기술 블로그 &mdash; AI Agent 생태계 구축기</p>
+        <p>원본: <a href="https://onyourside22.tistory.com">https://onyourside22.tistory.com</a></p>
+    </footer>
+</body>
+</html>
