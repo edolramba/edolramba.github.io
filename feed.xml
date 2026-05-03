@@ -5,7 +5,7 @@
     <link>https://onyourside22.tistory.com</link>
     <description>OpenOrchestrator 생태계의 설계와 구현을 기록하는 기술 블로그</description>
     <language>ko</language>
-    <lastBuildDate>Fri, 01 May 2026 17:26:28 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 03 May 2026 14:49:32 +0000</lastBuildDate>
     <atom:link href="https://edolramba.github.io/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
       <title>Circuit Breaker: AI Agent가 실패를 감지하고 스스로 멈추는 방법</title>
