@@ -5,12 +5,12 @@
     <link>https://onyourside22.tistory.com</link>
     <description>OpenOrchestrator 생태계의 설계와 구현을 기록하는 기술 블로그</description>
     <language>ko</language>
-    <lastBuildDate>Sun, 03 May 2026 15:54:57 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 03 May 2026 16:07:59 +0000</lastBuildDate>
     <atom:link href="https://edolramba.github.io/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
       <title>Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow</title>
       <link>https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow</link>
-      <description>Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 OO 기술 블로그 discoverability pipeline 구축기.</description>
+      <description>Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 구조와 공개 범위 원칙을 정리한 글.</description>
       <pubDate>Mon, 04 May 2026 00:00:00 +0000</pubDate>
       <guid isPermaLink="false">https://edolramba.github.io/posts/tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-github-pages-mirror%EC%99%80-indexnow.html</guid>
       <category>AI</category>

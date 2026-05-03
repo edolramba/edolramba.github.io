@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow — OO 기술 블로그</title>
-    <meta name="description" content="Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 OO 기술 블로그 discoverability pipeline 구축기.">
+    <meta name="description" content="Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 구조와 공개 범위 원칙을 정리한 글.">
     <meta name="keywords" content="AI, Agentic-AI, OpenOrchestrator, Tistory, GitHub-Pages, IndexNow, SEO, Automation">
     <link rel="canonical" href="https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow">
 
     <!-- Open Graph -->
     <meta property="og:title" content="Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow">
-    <meta property="og:description" content="Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 OO 기술 블로그 discoverability pipeline 구축기.">
+    <meta property="og:description" content="Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 구조와 공개 범위 원칙을 정리한 글.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow">
     <meta property="og:site_name" content="OO 기술 블로그">
@@ -21,7 +21,7 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow">
-    <meta name="twitter:description" content="Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 OO 기술 블로그 discoverability pipeline 구축기.">
+    <meta name="twitter:description" content="Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 구조와 공개 범위 원칙을 정리한 글.">
 
     <!-- Article metadata -->
     <meta property="article:published_time" content="2026-05-04">
@@ -71,234 +71,150 @@
 
         <p>OpenOrchestrator 시리즈 7편 | 2026.05</p>
 
-<p>이 글을 읽으면 세 가지를 알게 됩니다:</p>
+<p>글은 발행 버튼을 누르는 순간 끝나는 줄 알았다. 그런데 실제로 자동 블로그 파이프라인을 만들다 보니, 발행은 절반이었다.</p>
 
-<p>- Tistory에 글을 올렸는데 검색엔진에는 바로 보이지 않는 이유</p>
-<p>- GitHub Pages mirror를 검색 제어 surface로 쓰는 구조</p>
-<p>- IndexNow, sitemap, RSS를 발행 파이프라인에 자동으로 붙이는 방법</p>
+<p>사람은 글 주소를 직접 열어볼 수 있다. 하지만 검색엔진은 다르다. 새 글이 생겼다는 신호를 찾고, sitemap을 읽고, feed를 확인하고, 같은 글이 여러 주소에 있을 때 어느 쪽을 원본으로 볼지 판단한다. 이 과정이 느슨하면 글은 공개되어 있어도 검색엔진 입장에서는 한동안 없는 글처럼 남을 수 있다.</p>
 
-<hr>
+<p>이번 글은 그 문제를 어떻게 정리했는지에 대한 기록이다. 핵심은 단순하다.</p>
 
-<h2>글을 발행했는데 왜 검색이 안 될까</h2>
+<p>- Tistory는 사람이 읽는 원본으로 둔다.</p>
+<p>- GitHub Pages는 검색엔진이 읽기 쉬운 공개 mirror로 둔다.</p>
+<p>- 발행 직후 sitemap, RSS, IndexNow 신호를 자동으로 갱신한다.</p>
 
-<p>블로그 글을 발행하면 우리는 자연스럽게 이렇게 기대합니다.</p>
+<p>다만 먼저 선을 긋고 시작하자. 이 글은 운영 구조를 설명하지만, 내부 repository 이름, token 이름, 검증 파일의 실제 값, credential 처리 방식은 공개하지 않는다. 검색엔진 발견성을 높이는 설계와, 공개하면 안 되는 운영 세부 정보는 분리되어야 한다.</p>
 
-<p>“글을 올렸으니 Google, Bing, Naver가 알아서 가져가겠지.”</p>
+<h2>문제는 색인이 아니라 발견이었다</h2>
 
-<p>반은 맞고 반은 틀립니다. 검색엔진은 언젠가 크롤링할 수 있습니다. 하지만 “언젠가”는 자동화 시스템에서 좋은 단어가 아닙니다. 오늘 글을 올렸는데 며칠 뒤에야 발견될 수도 있고, 사이트 구조나 RSS, sitemap 상태에 따라 더 늦어질 수도 있습니다.</p>
+<p>블로그 글을 발행하면 자연스럽게 이런 기대를 하게 된다.</p>
 
-<p>OpenOrchestrator(이하 OO) 기술 블로그도 처음에는 단순했습니다.</p>
+<p>“공개 글이니까 Google, Bing, Naver가 알아서 가져가겠지.”</p>
 
-<p>| 단계 | 기존 방식 |</p>
+<p>언젠가는 그럴 수 있다. 하지만 자동화 시스템에서 “언젠가”는 애매한 상태다. 글을 썼고, 공개했고, 링크도 열리는데 검색엔진이 언제 발견할지는 플랫폼의 크롤링 주기에 맡겨져 있다.</p>
+
+<p>내가 원한 것은 검색 순위를 조작하거나 색인을 강제로 보장하는 일이 아니었다. 그건 검색엔진이 결정할 일이다. 대신 내가 통제할 수 있는 것은 분명했다.</p>
+
+<p>| 통제할 수 있는 것 | 의미 |</p>
 <p>|---|---|</p>
-<p>| 글 작성 | draft JSON 생성 |</p>
-<p>| 원본 발행 | Tistory에 공개 |</p>
-<p>| 검색 등록 | 사람이 나중에 수동 확인 |</p>
-<p>| sitemap 관리 | 플랫폼 기본값에 의존 |</p>
-<p>| 검색엔진 알림 | 없음 |</p>
+<p>| 공개 URL | 검색엔진이 접근 가능한 주소 |</p>
+<p>| sitemap | 공개 글 목록을 명확히 알려주는 파일 |</p>
+<p>| RSS feed | 최신 글이 추가됐다는 신호 |</p>
+<p>| canonical | 원본 URL이 어디인지 알려주는 힌트 |</p>
+<p>| IndexNow | 변경된 URL을 검색엔진에 알리는 요청 |</p>
 
-<p>문제는 마지막 두 줄입니다. 글 발행까지 자동화해도 검색엔진 발견이 수동이면 전체 파이프라인은 아직 완전하지 않습니다. 자동화의 끝은 “글이 발행됐다”가 아니라 “검색엔진이 발견할 수 있는 공개 표면까지 갱신됐다”에 가깝습니다.</p>
+<p>그래서 목표를 “검색 결과에 즉시 나오게 만들기”가 아니라 “검색엔진이 발견하지 못할 이유를 줄이기”로 잡았다. 이 차이가 중요했다.</p>
 
-<h2>Tistory는 원본, GitHub Pages는 검색 제어 surface</h2>
+<h2>Tistory는 원본으로 남긴다</h2>
 
-<p>OO 블로그는 Tistory를 버리지 않았습니다. Tistory는 한국 검색 노출과 기존 블로그 운영 측면에서 여전히 좋은 원본 위치입니다. 대신 검색엔진이 읽기 좋은 보조 표면을 하나 더 만들었습니다.</p>
+<p>OO 기술 블로그의 원본은 Tistory다. 한국 검색 노출, 기존 블로그 운영, 독자 경험을 생각하면 Tistory를 굳이 버릴 이유가 없었다.</p>
+
+<p>대신 Tistory가 모든 검색 제어 기능을 떠맡게 하지는 않았다. 블로그 플랫폼은 글을 쓰고 읽히는 데는 좋지만, 검색엔진용 루트 파일을 안정적으로 배치하거나 배포 파이프라인으로 다루기에는 제약이 있다.</p>
+
+<p>그래서 역할을 나눴다.</p>
 
 <pre><code>
-[Tistory]
-  역할: 사람이 읽는 원본 글
-  주소: https://onyourside22.tistory.com
+Tistory
+  - 사람이 읽는 원본 글
+  - 댓글, 카테고리, 기존 블로그 경험 유지
+  - canonical 기준 URL
 
-[GitHub Pages]
-  역할: 검색엔진 발견성 제어 surface
-  주소: https://edolramba.github.io
+GitHub Pages mirror
+  - 검색엔진이 읽기 쉬운 보조 표면
+  - sitemap, RSS, robots, verification 파일 제공
+  - 발행 파이프라인에서 자동 갱신
 </code></pre>
 
-<p>여기서 중요한 단어는 mirror입니다. GitHub Pages에 같은 글을 한 번 더 올리지만, 원본 행세를 하지 않습니다. 각 mirror 페이지의 <code><link rel="canonical"></code>은 Tistory 원본 글을 가리킵니다.</p>
+<p>여기서 mirror는 원본 행세를 하지 않는다. mirror 페이지는 Tistory 원문을 canonical로 가리킨다. 검색엔진에게 “이쪽은 발견을 돕는 보조 페이지이고, 원본은 Tistory 글”이라고 알려주는 구조다.</p>
 
-<p>검색엔진에게는 이렇게 말하는 셈입니다.</p>
+<h2>왜 mirror가 필요한가</h2>
 
-<p>“이 페이지는 검색을 돕기 위한 복제본이고, 원본은 Tistory 글입니다.”</p>
+<p>Tistory 글 자체는 공개되어 있다. 그런데 검색엔진 discoverability를 자동화하려면 글 본문 외에도 여러 신호가 필요하다.</p>
 
-<p>이렇게 하면 GitHub Pages는 sitemap, RSS, robots, verification file, IndexNow key를 안정적으로 제공하는 표면이 되고, Tistory는 canonical origin(원본 위치)으로 남습니다.</p>
+<p>- 새 글 URL이 sitemap에 들어가야 한다.</p>
+<p>- RSS feed에 최신 글이 반영되어야 한다.</p>
+<p>- robots.txt가 sitemap 위치를 알려줘야 한다.</p>
+<p>- 검색엔진 소유권 검증 파일이 배포 중 사라지면 안 된다.</p>
+<p>- 변경된 URL 목록을 IndexNow로 제출할 수 있어야 한다.</p>
 
-<h2>왜 굳이 GitHub Pages가 필요한가</h2>
+<p>GitHub Pages는 이런 정적 파일을 다루기에 좋다. 파일을 생성하고, 검증 파일을 보존하고, 배포 후 검색엔진에 알리는 흐름을 CI로 묶을 수 있다.</p>
 
-<p>Tistory만으로도 글은 발행됩니다. 하지만 자동 검색 등록을 하려면 루트 경로에 여러 파일을 정확히 둬야 합니다.</p>
+<p>결과적으로 Tistory는 원본 경험을 담당하고, GitHub Pages는 검색엔진과 대화하는 공개 표면이 된다. 독자가 볼 때는 Tistory가 중심이고, 시스템 관점에서는 mirror가 발견성을 보조한다.</p>
 
-<p>| 파일 | 역할 |</p>
-<p>|---|---|</p>
-<p>| <code>sitemap.xml</code> | 검색엔진에게 공개 URL 목록 전달 |</p>
-<p>| <code>feed.xml</code> | 최신 글 목록을 RSS 형태로 제공 |</p>
-<p>| <code>robots.txt</code> | 크롤러에게 sitemap 위치 안내 |</p>
-<p>| <code>{INDEXNOW_KEY}.txt</code> | IndexNow 소유권 검증 |</p>
-<p>| <code>google*.html</code> | Google Search Console 소유권 검증 |</p>
-<p>| <code>naver*.html</code> | Naver Search Advisor 소유권 검증 |</p>
+<h2>발행 후 자동으로 바뀌는 것</h2>
 
-<p>GitHub Pages는 이런 파일을 루트에 그대로 둘 수 있습니다. 그리고 GitHub Actions가 push될 때마다 자동으로 갱신할 수 있습니다. 이 점이 핵심입니다.</p>
-
-<p>Tistory는 글을 읽히는 곳으로 남기고, GitHub Pages는 검색엔진과 대화하는 자동화 가능한 표면으로 쓰는 구조입니다.</p>
-
-<h2>전체 파이프라인</h2>
-
-<p>현재 OO 블로그 발행 흐름은 이렇게 정리할 수 있습니다.</p>
+<p>현재 발행 흐름은 이렇게 정리된다.</p>
 
 <pre><code>
-1. data/oo-blog/draft-*.json 작성
-2. publish_oo_blog.py로 Tistory 공개 발행
-3. 공개 Tistory URL을 draft JSON에 기록
-4. GitHub Pages mirror 재생성
-5. sitemap.xml, feed.xml, robots.txt 갱신
-6. edolramba.github.io public repo에 push
-7. IndexNow global endpoint와 Naver endpoint에 URL 제출
+초안 작성
+  -&gt; Tistory 공개 발행
+  -&gt; 공개 URL 기록
+  -&gt; GitHub Pages mirror 재생성
+  -&gt; sitemap / RSS / robots 갱신
+  -&gt; IndexNow 제출
 </code></pre>
 
-<p>코드 관점에서는 <code>post_publish_discoverability.py</code>가 4번부터 7번까지를 담당합니다.</p>
+<p>이 흐름에서 중요한 것은 “발행 이후”다. 글이 올라간 뒤에 mirror, sitemap, feed가 함께 갱신되지 않으면 검색엔진이 보는 공개 표면은 낡은 상태로 남는다.</p>
 
-<pre><code class="language-bash">
-python scripts/oo/post_publish_discoverability.py \
-  --draft data/oo-blog/draft-YYYY-MM-DD.json \
-  --public-url https://onyourside22.tistory.com/entry/... \
-  --published-at 2026-05-04 \
-  --submit-indexnow
-</code></pre>
+<p>특히 canonical URL은 반드시 정확해야 한다. 같은 글이 Tistory와 mirror 양쪽에 있을 때 canonical이 없다면 검색엔진은 두 페이지를 중복 콘텐츠로 볼 수 있다. 그래서 mirror는 자기 자신을 원본이라고 주장하지 않고, Tistory 원문을 원본으로 가리킨다.</p>
 
-<p>발행 자동화가 성공하면 draft JSON에는 이런 메타데이터가 추가됩니다.</p>
+<h2>IndexNow가 해주는 일과 못 해주는 일</h2>
 
-<pre><code class="language-json">
-{
-  "tistory_url": "https://onyourside22.tistory.com/entry/...",
-  "published_url": "https://onyourside22.tistory.com/entry/...",
-  "published_urls": {
-    "tistory": "https://onyourside22.tistory.com/entry/..."
-  },
-  "published_at": "2026-05-04",
-  "discoverability_synced_at": "2026-05-04T00:00:00+00:00"
-}
-</code></pre>
+<p>IndexNow는 “이 URL들이 새로 생겼거나 바뀌었으니 확인해 달라”고 검색엔진에 알려주는 프로토콜이다. Bing 계열과 Naver Search Advisor 쪽에 변경 신호를 보낼 수 있다.</p>
 
-<p>이 메타데이터가 있어야 mirror의 canonical URL이 정확해집니다. canonical이 빠지면 검색엔진 입장에서는 같은 글이 두 사이트에 중복으로 올라온 것처럼 보일 수 있습니다.</p>
+<p>다만 IndexNow는 색인 보장 버튼이 아니다. 요청이 성공했다고 해서 검색 결과에 바로 뜬다는 뜻은 아니다. 이 점은 공개 글에서도 분명히 말해야 한다.</p>
 
-<h2>IndexNow는 무엇을 해주는가</h2>
+<p>정리하면 이렇다.</p>
 
-<p>IndexNow는 검색엔진에게 “이 URL들이 바뀌었으니 확인해달라”고 알려주는 프로토콜입니다. 색인을 보장하지는 않습니다. 하지만 검색엔진이 새 URL을 발견하는 시간을 줄이는 데 도움이 됩니다.</p>
-
-<p>요청 payload는 단순합니다.</p>
-
-<pre><code class="language-json">
-{
-  "host": "edolramba.github.io",
-  "key": "&lt;redacted&gt;",
-  "keyLocation": "https://edolramba.github.io/{key}.txt",
-  "urlList": [
-    "https://edolramba.github.io/",
-    "https://edolramba.github.io/sitemap.xml",
-    "https://edolramba.github.io/feed.xml",
-    "https://edolramba.github.io/posts/example.html"
-  ]
-}
-</code></pre>
-
-<p>여기서 <code>key</code> 값 자체는 secret처럼 다루지 않습니다. IndexNow key는 사이트 루트의 <code>{key}.txt</code>로 공개 검증되는 값입니다. 다만 로그에는 습관적으로 <code><redacted></code> 처리합니다. 공개 키라도 불필요하게 노출 범위를 넓힐 이유는 없기 때문입니다.</p>
-
-<p>OO 블로그는 두 endpoint에 동시에 제출합니다.</p>
-
-<p>| endpoint | 목적 |</p>
+<p>| 항목 | 가능 여부 |</p>
 <p>|---|---|</p>
-<p>| <code>https://api.indexnow.org/indexnow</code> | Bing 등 IndexNow 호환 검색엔진 |</p>
-<p>| <code>https://searchadvisor.naver.com/indexnow</code> | Naver Search Advisor IndexNow |</p>
+<p>| 새 URL을 검색엔진에 알리기 | 가능 |</p>
+<p>| sitemap과 feed를 최신 상태로 유지 | 가능 |</p>
+<p>| 검색엔진 소유권 검증 파일 보존 | 가능 |</p>
+<p>| 검색 결과 노출 시점 보장 | 불가능 |</p>
+<p>| 검색 순위 보장 | 불가능 |</p>
 
-<p>성공하면 HTTP 200 또는 202를 받습니다. 200은 접수 완료, 202는 비동기 접수에 가깝게 보면 됩니다.</p>
+<p>자동화가 책임질 수 있는 것은 입력 신호다. 결과 판단은 검색엔진의 영역이다.</p>
 
-<h2>GitHub Actions에서 다른 repo에 push하기</h2>
+<h2>운영하면서 조심한 것</h2>
 
-<p>여기서 한 번 막힌 지점이 있었습니다. <code>AUTO-SHORTS01</code>는 private repo이고, <code>edolramba.github.io</code>는 public repo입니다. GitHub Actions의 기본 <code>GITHUB_TOKEN</code>은 자기 repo 안에서는 강하지만, 다른 repo에 마음대로 push할 수 없습니다.</p>
+<p>이 작업에서 의외로 중요했던 부분은 보안과 공개 범위였다.</p>
 
-<p>그래서 fine-grained token을 하나 만들었습니다.</p>
+<p>검색엔진 연동을 자동화하려면 배포 권한, 검증 파일, 제출 키 같은 운영 요소가 등장한다. 하지만 기술 블로그에 그 세부값을 그대로 적을 필요는 없다. 독자에게 필요한 것은 “어떤 설계 판단을 했는가”이지, 내 저장소와 credential 구조의 세부 정보가 아니다.</p>
 
-<p>| 항목 | 값 |</p>
-<p>|---|---|</p>
-<p>| token owner | <code>edolramba</code> |</p>
-<p>| 접근 repo | <code>edolramba/edolramba.github.io</code> |</p>
-<p>| 권한 | <code>Contents: Read and write</code> |</p>
-<p>| 저장 위치 | <code>AUTO-SHORTS01</code> Actions secret |</p>
-<p>| secret 이름 | <code>PUBLIC_PAGES_TOKEN</code> |</p>
+<p>그래서 공개 글에서는 다음 원칙을 둔다.</p>
 
-<p>처음에는 token은 있었지만 <code>Contents: Read and write</code> 권한이 빠져서 403이 발생했습니다.</p>
+<p>- token이나 secret의 실제 이름은 쓰지 않는다.</p>
+<p>- private 저장소 이름과 권한 구조는 자세히 쓰지 않는다.</p>
+<p>- 검증 파일의 실제 값은 공개 예시로 넣지 않는다.</p>
+<p>- 실패 로그는 원문보다 원인과 해결 방향만 설명한다.</p>
+<p>- 내부 명령어는 필요한 경우에도 추상화해서 설명한다.</p>
 
-<pre><code class="language-text">
-Permission to edolramba/edolramba.github.io.git denied
-</code></pre>
-
-<p>해결은 단순했습니다. token 권한을 수정하고 workflow를 다시 실행했습니다. 이후 <code>Publish static mirror</code> 단계가 통과했고, <code>Submit search registration</code> 단계에서 IndexNow 제출까지 성공했습니다.</p>
-
-<h2>검증 파일을 지우지 않는 것도 중요하다</h2>
-
-<p>자동 배포 스크립트는 보통 output directory를 깨끗하게 만들기 위해 기존 파일을 지웁니다. 하지만 검색엔진 소유권 검증 파일까지 지우면 문제가 됩니다.</p>
-
-<p>예를 들어 이런 파일들입니다.</p>
-
-<pre><code class="language-text">
-google42032b2700db07f9.html
-naver96b6db9daa2c19f27c61a97f17e7f57f.html
-BingSiteAuth.xml
-</code></pre>
-
-<p>한 번 검증이 끝났다고 지워도 되는 파일이 아닙니다. Search Console이나 Search Advisor는 나중에도 소유권을 재확인할 수 있습니다. 그래서 배포 workflow는 mirror를 갈아엎기 전에 검증 파일을 보존합니다.</p>
-
-<pre><code class="language-bash">
-mkdir -p preserved-verification
-find public-mirror -maxdepth 1 -type f \( \
-  -name 'google*.html' -o \
-  -name 'naver*.html' -o \
-  -name 'BingSiteAuth.xml' \
-\) -exec cp {} preserved-verification/ \;
-
-find public-mirror -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-cp -a gh-pages-out/. public-mirror/
-cp -a preserved-verification/. public-mirror/
-</code></pre>
-
-<p>이 작은 보존 로직이 없으면 자동화가 스스로 검색엔진 검증 상태를 깨뜨릴 수 있습니다.</p>
+<p>이 기준을 지키면 글은 여전히 기술적으로 유용하면서도, 운영 정보를 불필요하게 드러내지 않는다.</p>
 
 <h2>Before vs After</h2>
 
+<p>이전에는 글 발행과 검색엔진 발견 사이에 사람이 끼어 있었다.</p>
+
 <p>| 항목 | 이전 | 이후 |</p>
 <p>|---|---|---|</p>
-<p>| Tistory 발행 | 가능 | 가능 |</p>
-<p>| GitHub mirror | 없음 | 자동 생성 |</p>
-<p>| sitemap | 플랫폼 기본값 의존 | 직접 생성 |</p>
-<p>| RSS | Tistory 의존 | mirror feed 제공 |</p>
-<p>| IndexNow | 없음 | global + Naver 제출 |</p>
-<p>| 검증 파일 | 수동 관리 | 자동 배포에서 보존 |</p>
-<p>| 검색엔진 발견 | 기다림 | 발행 직후 알림 |</p>
+<p>| Tistory 발행 | 자동화 가능 | 자동화 유지 |</p>
+<p>| mirror page | 없음 | 자동 생성 |</p>
+<p>| sitemap / RSS | 플랫폼 기본값 의존 | 발행 후 자동 갱신 |</p>
+<p>| 검색엔진 알림 | 수동 확인 | IndexNow 자동 제출 |</p>
+<p>| 원본 표시 | 명확하지 않음 | Tistory canonical 유지 |</p>
+<p>| 검증 파일 | 수동 관리 | 배포 중 보존 |</p>
 
-<p>핵심 변화는 “기다림”에서 “알림”으로 바뀐 것입니다. 검색엔진 색인을 강제로 보장할 수는 없습니다. 하지만 글을 발행한 직후, 검색엔진이 확인할 수 있는 모든 공개 신호를 자동으로 갱신할 수는 있습니다.</p>
-
-<h2>이 구조가 완전 자동 검색 등록인가</h2>
-
-<p>정확히 말하면 “완전 자동 색인”은 아닙니다. Google, Naver, Bing 어느 쪽도 색인을 100% 보장하는 API를 제공하지 않습니다. 우리가 할 수 있는 것은 다음 세 가지입니다.</p>
-
-<p>| 할 수 있는 것 | 설명 |</p>
-<p>|---|---|</p>
-<p>| 공개 URL 제공 | mirror page, sitemap, feed |</p>
-<p>| 소유권 증명 | verification HTML, IndexNow key |</p>
-<p>| 변경 알림 | IndexNow POST, sitemap 제출 |</p>
-
-<p>검색엔진이 실제로 언제 색인할지는 검색엔진의 판단입니다. 그래서 이 시스템의 목표는 “검색 결과에 즉시 뜨게 만들기”가 아니라 “검색엔진이 발견하지 못할 이유를 없애기”입니다.</p>
-
-<p>자동화 시스템에서는 이 차이가 중요합니다. 통제할 수 없는 결과를 약속하지 않고, 통제 가능한 입력 신호를 빠짐없이 넣는 것이 좋은 설계입니다.</p>
+<p>가장 큰 변화는 “기다림”에서 “알림”으로 바뀐 것이다. 글을 올린 뒤 검색엔진이 언젠가 찾아오길 기다리는 대신, 새 글이 생겼다는 신호를 바로 정리해서 보낸다.</p>
 
 <h2>정리</h2>
 
-<p>이번 구조의 핵심은 세 줄입니다.</p>
+<p>이번 작업의 결론은 간단하다.</p>
 
-<p>- Tistory는 원본이다. GitHub Pages는 검색엔진이 읽기 좋은 mirror surface다.</p>
-<p>- mirror에는 canonical, sitemap, feed, robots, verification file, IndexNow key를 둔다.</p>
-<p>- 발행 후에는 GitHub Actions가 mirror를 갱신하고 IndexNow로 변경을 알린다.</p>
+<p>블로그 자동화의 끝은 “글이 발행됐다”가 아니다. 글이 공개되고, 원본 URL이 기록되고, mirror가 갱신되고, sitemap과 RSS가 최신 상태가 되고, 검색엔진에 변경 신호가 전달되는 지점까지가 한 바퀴다.</p>
 
-<p>블로그 자동화에서 “발행”은 끝이 아닙니다. 발행된 글이 검색엔진에게 발견될 수 있도록 공개 표면을 정리하는 것까지가 파이프라인입니다.</p>
+<p>물론 이것이 완전 자동 색인을 의미하지는 않는다. 검색엔진이 언제, 어떻게 색인할지는 여전히 검색엔진의 판단이다. 하지만 적어도 시스템이 할 수 있는 준비는 자동으로 끝낼 수 있다.</p>
 
-<p>OO 생태계의 북극성은 완전자율주행입니다. 글을 쓰고 올리는 것만 자동화하면 반쪽입니다. 글이 검색엔진에게 발견될 준비까지 끝났을 때, 비로소 콘텐츠 파이프라인이 한 바퀴 돈 것입니다.</p>
+<p>OO 생태계의 북극성은 완전자율주행이다. 콘텐츠 파이프라인에서도 마찬가지다. 글을 쓰는 자동화보다 중요한 것은, 글이 공개된 뒤 독자와 검색엔진이 자연스럽게 발견할 수 있는 상태까지 책임지는 것이다.</p>
+
     </article>
 
     <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 0.85rem;">
