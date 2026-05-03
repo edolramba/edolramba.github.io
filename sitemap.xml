@@ -24,4 +24,10 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://edolramba.github.io/posts/tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-github-pages-mirror%EC%99%80-indexnow.html</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

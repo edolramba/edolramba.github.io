@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow — OO 기술 블로그</title>
+    <meta name="description" content="Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 OO 기술 블로그 discoverability pipeline 구축기.">
+    <meta name="keywords" content="AI, Agentic-AI, OpenOrchestrator, Tistory, GitHub-Pages, IndexNow, SEO, Automation">
+    <link rel="canonical" href="https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow">
+    <meta property="og:description" content="Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 OO 기술 블로그 discoverability pipeline 구축기.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow">
+    <meta property="og:site_name" content="OO 기술 블로그">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow">
+    <meta name="twitter:description" content="Tistory 원본 글을 GitHub Pages mirror, sitemap, RSS, IndexNow로 검색엔진에 자동 발견 요청하는 OO 기술 블로그 discoverability pipeline 구축기.">
+
+    <!-- Article metadata -->
+    <meta property="article:published_time" content="2026-05-04">
+    <meta property="article:section" content="Vibe Coding">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            line-height: 1.8;
+            color: #333;
+        }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.5rem; margin-top: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.3rem; }
+        h3 { font-size: 1.2rem; margin-top: 1.5rem; }
+        pre { background: #f6f8fa; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+        code { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+        blockquote { border-left: 4px solid #dfe2e5; margin: 1rem 0; padding: 0.5rem 1rem; color: #6a737d; }
+        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        th, td { border: 1px solid #dfe2e5; padding: 0.5rem; text-align: left; }
+        th { background: #f6f8fa; }
+        .meta { color: #666; font-size: 0.9rem; margin-bottom: 2rem; }
+        .canonical-notice { background: #fff3cd; padding: 0.75rem; border-radius: 4px; margin-bottom: 2rem; font-size: 0.85rem; }
+        a { color: #0366d6; }
+        nav { margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+    <nav><a href="index.html">&larr; OO 기술 블로그 시리즈 목록</a></nav>
+
+    <article>
+        <h1>Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow</h1>
+        <div class="meta">
+            <time datetime="2026-05-04">2026-05-04</time> &middot;
+            11분 읽기 &middot;
+            AI, Agentic-AI, OpenOrchestrator, Tistory, GitHub-Pages
+        </div>
+
+        <div class="canonical-notice">
+            이 글의 원본은 <a href="https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow">Tistory 블로그</a>에서 확인할 수 있습니다.
+        </div>
+
+        <p>OpenOrchestrator 시리즈 7편 | 2026.05</p>
+
+<p>이 글을 읽으면 세 가지를 알게 됩니다:</p>
+
+<p>- Tistory에 글을 올렸는데 검색엔진에는 바로 보이지 않는 이유</p>
+<p>- GitHub Pages mirror를 검색 제어 surface로 쓰는 구조</p>
+<p>- IndexNow, sitemap, RSS를 발행 파이프라인에 자동으로 붙이는 방법</p>
+
+<hr>
+
+<h2>글을 발행했는데 왜 검색이 안 될까</h2>
+
+<p>블로그 글을 발행하면 우리는 자연스럽게 이렇게 기대합니다.</p>
+
+<p>“글을 올렸으니 Google, Bing, Naver가 알아서 가져가겠지.”</p>
+
+<p>반은 맞고 반은 틀립니다. 검색엔진은 언젠가 크롤링할 수 있습니다. 하지만 “언젠가”는 자동화 시스템에서 좋은 단어가 아닙니다. 오늘 글을 올렸는데 며칠 뒤에야 발견될 수도 있고, 사이트 구조나 RSS, sitemap 상태에 따라 더 늦어질 수도 있습니다.</p>
+
+<p>OpenOrchestrator(이하 OO) 기술 블로그도 처음에는 단순했습니다.</p>
+
+<p>| 단계 | 기존 방식 |</p>
+<p>|---|---|</p>
+<p>| 글 작성 | draft JSON 생성 |</p>
+<p>| 원본 발행 | Tistory에 공개 |</p>
+<p>| 검색 등록 | 사람이 나중에 수동 확인 |</p>
+<p>| sitemap 관리 | 플랫폼 기본값에 의존 |</p>
+<p>| 검색엔진 알림 | 없음 |</p>
+
+<p>문제는 마지막 두 줄입니다. 글 발행까지 자동화해도 검색엔진 발견이 수동이면 전체 파이프라인은 아직 완전하지 않습니다. 자동화의 끝은 “글이 발행됐다”가 아니라 “검색엔진이 발견할 수 있는 공개 표면까지 갱신됐다”에 가깝습니다.</p>
+
+<h2>Tistory는 원본, GitHub Pages는 검색 제어 surface</h2>
+
+<p>OO 블로그는 Tistory를 버리지 않았습니다. Tistory는 한국 검색 노출과 기존 블로그 운영 측면에서 여전히 좋은 원본 위치입니다. 대신 검색엔진이 읽기 좋은 보조 표면을 하나 더 만들었습니다.</p>
+
+<pre><code>
+[Tistory]
+  역할: 사람이 읽는 원본 글
+  주소: https://onyourside22.tistory.com
+
+[GitHub Pages]
+  역할: 검색엔진 발견성 제어 surface
+  주소: https://edolramba.github.io
+</code></pre>
+
+<p>여기서 중요한 단어는 mirror입니다. GitHub Pages에 같은 글을 한 번 더 올리지만, 원본 행세를 하지 않습니다. 각 mirror 페이지의 <code><link rel="canonical"></code>은 Tistory 원본 글을 가리킵니다.</p>
+
+<p>검색엔진에게는 이렇게 말하는 셈입니다.</p>
+
+<p>“이 페이지는 검색을 돕기 위한 복제본이고, 원본은 Tistory 글입니다.”</p>
+
+<p>이렇게 하면 GitHub Pages는 sitemap, RSS, robots, verification file, IndexNow key를 안정적으로 제공하는 표면이 되고, Tistory는 canonical origin(원본 위치)으로 남습니다.</p>
+
+<h2>왜 굳이 GitHub Pages가 필요한가</h2>
+
+<p>Tistory만으로도 글은 발행됩니다. 하지만 자동 검색 등록을 하려면 루트 경로에 여러 파일을 정확히 둬야 합니다.</p>
+
+<p>| 파일 | 역할 |</p>
+<p>|---|---|</p>
+<p>| <code>sitemap.xml</code> | 검색엔진에게 공개 URL 목록 전달 |</p>
+<p>| <code>feed.xml</code> | 최신 글 목록을 RSS 형태로 제공 |</p>
+<p>| <code>robots.txt</code> | 크롤러에게 sitemap 위치 안내 |</p>
+<p>| <code>{INDEXNOW_KEY}.txt</code> | IndexNow 소유권 검증 |</p>
+<p>| <code>google*.html</code> | Google Search Console 소유권 검증 |</p>
+<p>| <code>naver*.html</code> | Naver Search Advisor 소유권 검증 |</p>
+
+<p>GitHub Pages는 이런 파일을 루트에 그대로 둘 수 있습니다. 그리고 GitHub Actions가 push될 때마다 자동으로 갱신할 수 있습니다. 이 점이 핵심입니다.</p>
+
+<p>Tistory는 글을 읽히는 곳으로 남기고, GitHub Pages는 검색엔진과 대화하는 자동화 가능한 표면으로 쓰는 구조입니다.</p>
+
+<h2>전체 파이프라인</h2>
+
+<p>현재 OO 블로그 발행 흐름은 이렇게 정리할 수 있습니다.</p>
+
+<pre><code>
+1. data/oo-blog/draft-*.json 작성
+2. publish_oo_blog.py로 Tistory 공개 발행
+3. 공개 Tistory URL을 draft JSON에 기록
+4. GitHub Pages mirror 재생성
+5. sitemap.xml, feed.xml, robots.txt 갱신
+6. edolramba.github.io public repo에 push
+7. IndexNow global endpoint와 Naver endpoint에 URL 제출
+</code></pre>
+
+<p>코드 관점에서는 <code>post_publish_discoverability.py</code>가 4번부터 7번까지를 담당합니다.</p>
+
+<pre><code class="language-bash">
+python scripts/oo/post_publish_discoverability.py \
+  --draft data/oo-blog/draft-YYYY-MM-DD.json \
+  --public-url https://onyourside22.tistory.com/entry/... \
+  --published-at 2026-05-04 \
+  --submit-indexnow
+</code></pre>
+
+<p>발행 자동화가 성공하면 draft JSON에는 이런 메타데이터가 추가됩니다.</p>
+
+<pre><code class="language-json">
+{
+  "tistory_url": "https://onyourside22.tistory.com/entry/...",
+  "published_url": "https://onyourside22.tistory.com/entry/...",
+  "published_urls": {
+    "tistory": "https://onyourside22.tistory.com/entry/..."
+  },
+  "published_at": "2026-05-04",
+  "discoverability_synced_at": "2026-05-04T00:00:00+00:00"
+}
+</code></pre>
+
+<p>이 메타데이터가 있어야 mirror의 canonical URL이 정확해집니다. canonical이 빠지면 검색엔진 입장에서는 같은 글이 두 사이트에 중복으로 올라온 것처럼 보일 수 있습니다.</p>
+
+<h2>IndexNow는 무엇을 해주는가</h2>
+
+<p>IndexNow는 검색엔진에게 “이 URL들이 바뀌었으니 확인해달라”고 알려주는 프로토콜입니다. 색인을 보장하지는 않습니다. 하지만 검색엔진이 새 URL을 발견하는 시간을 줄이는 데 도움이 됩니다.</p>
+
+<p>요청 payload는 단순합니다.</p>
+
+<pre><code class="language-json">
+{
+  "host": "edolramba.github.io",
+  "key": "&lt;redacted&gt;",
+  "keyLocation": "https://edolramba.github.io/{key}.txt",
+  "urlList": [
+    "https://edolramba.github.io/",
+    "https://edolramba.github.io/sitemap.xml",
+    "https://edolramba.github.io/feed.xml",
+    "https://edolramba.github.io/posts/example.html"
+  ]
+}
+</code></pre>
+
+<p>여기서 <code>key</code> 값 자체는 secret처럼 다루지 않습니다. IndexNow key는 사이트 루트의 <code>{key}.txt</code>로 공개 검증되는 값입니다. 다만 로그에는 습관적으로 <code><redacted></code> 처리합니다. 공개 키라도 불필요하게 노출 범위를 넓힐 이유는 없기 때문입니다.</p>
+
+<p>OO 블로그는 두 endpoint에 동시에 제출합니다.</p>
+
+<p>| endpoint | 목적 |</p>
+<p>|---|---|</p>
+<p>| <code>https://api.indexnow.org/indexnow</code> | Bing 등 IndexNow 호환 검색엔진 |</p>
+<p>| <code>https://searchadvisor.naver.com/indexnow</code> | Naver Search Advisor IndexNow |</p>
+
+<p>성공하면 HTTP 200 또는 202를 받습니다. 200은 접수 완료, 202는 비동기 접수에 가깝게 보면 됩니다.</p>
+
+<h2>GitHub Actions에서 다른 repo에 push하기</h2>
+
+<p>여기서 한 번 막힌 지점이 있었습니다. <code>AUTO-SHORTS01</code>는 private repo이고, <code>edolramba.github.io</code>는 public repo입니다. GitHub Actions의 기본 <code>GITHUB_TOKEN</code>은 자기 repo 안에서는 강하지만, 다른 repo에 마음대로 push할 수 없습니다.</p>
+
+<p>그래서 fine-grained token을 하나 만들었습니다.</p>
+
+<p>| 항목 | 값 |</p>
+<p>|---|---|</p>
+<p>| token owner | <code>edolramba</code> |</p>
+<p>| 접근 repo | <code>edolramba/edolramba.github.io</code> |</p>
+<p>| 권한 | <code>Contents: Read and write</code> |</p>
+<p>| 저장 위치 | <code>AUTO-SHORTS01</code> Actions secret |</p>
+<p>| secret 이름 | <code>PUBLIC_PAGES_TOKEN</code> |</p>
+
+<p>처음에는 token은 있었지만 <code>Contents: Read and write</code> 권한이 빠져서 403이 발생했습니다.</p>
+
+<pre><code class="language-text">
+Permission to edolramba/edolramba.github.io.git denied
+</code></pre>
+
+<p>해결은 단순했습니다. token 권한을 수정하고 workflow를 다시 실행했습니다. 이후 <code>Publish static mirror</code> 단계가 통과했고, <code>Submit search registration</code> 단계에서 IndexNow 제출까지 성공했습니다.</p>
+
+<h2>검증 파일을 지우지 않는 것도 중요하다</h2>
+
+<p>자동 배포 스크립트는 보통 output directory를 깨끗하게 만들기 위해 기존 파일을 지웁니다. 하지만 검색엔진 소유권 검증 파일까지 지우면 문제가 됩니다.</p>
+
+<p>예를 들어 이런 파일들입니다.</p>
+
+<pre><code class="language-text">
+google42032b2700db07f9.html
+naver96b6db9daa2c19f27c61a97f17e7f57f.html
+BingSiteAuth.xml
+</code></pre>
+
+<p>한 번 검증이 끝났다고 지워도 되는 파일이 아닙니다. Search Console이나 Search Advisor는 나중에도 소유권을 재확인할 수 있습니다. 그래서 배포 workflow는 mirror를 갈아엎기 전에 검증 파일을 보존합니다.</p>
+
+<pre><code class="language-bash">
+mkdir -p preserved-verification
+find public-mirror -maxdepth 1 -type f \( \
+  -name 'google*.html' -o \
+  -name 'naver*.html' -o \
+  -name 'BingSiteAuth.xml' \
+\) -exec cp {} preserved-verification/ \;
+
+find public-mirror -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+cp -a gh-pages-out/. public-mirror/
+cp -a preserved-verification/. public-mirror/
+</code></pre>
+
+<p>이 작은 보존 로직이 없으면 자동화가 스스로 검색엔진 검증 상태를 깨뜨릴 수 있습니다.</p>
+
+<h2>Before vs After</h2>
+
+<p>| 항목 | 이전 | 이후 |</p>
+<p>|---|---|---|</p>
+<p>| Tistory 발행 | 가능 | 가능 |</p>
+<p>| GitHub mirror | 없음 | 자동 생성 |</p>
+<p>| sitemap | 플랫폼 기본값 의존 | 직접 생성 |</p>
+<p>| RSS | Tistory 의존 | mirror feed 제공 |</p>
+<p>| IndexNow | 없음 | global + Naver 제출 |</p>
+<p>| 검증 파일 | 수동 관리 | 자동 배포에서 보존 |</p>
+<p>| 검색엔진 발견 | 기다림 | 발행 직후 알림 |</p>
+
+<p>핵심 변화는 “기다림”에서 “알림”으로 바뀐 것입니다. 검색엔진 색인을 강제로 보장할 수는 없습니다. 하지만 글을 발행한 직후, 검색엔진이 확인할 수 있는 모든 공개 신호를 자동으로 갱신할 수는 있습니다.</p>
+
+<h2>이 구조가 완전 자동 검색 등록인가</h2>
+
+<p>정확히 말하면 “완전 자동 색인”은 아닙니다. Google, Naver, Bing 어느 쪽도 색인을 100% 보장하는 API를 제공하지 않습니다. 우리가 할 수 있는 것은 다음 세 가지입니다.</p>
+
+<p>| 할 수 있는 것 | 설명 |</p>
+<p>|---|---|</p>
+<p>| 공개 URL 제공 | mirror page, sitemap, feed |</p>
+<p>| 소유권 증명 | verification HTML, IndexNow key |</p>
+<p>| 변경 알림 | IndexNow POST, sitemap 제출 |</p>
+
+<p>검색엔진이 실제로 언제 색인할지는 검색엔진의 판단입니다. 그래서 이 시스템의 목표는 “검색 결과에 즉시 뜨게 만들기”가 아니라 “검색엔진이 발견하지 못할 이유를 없애기”입니다.</p>
+
+<p>자동화 시스템에서는 이 차이가 중요합니다. 통제할 수 없는 결과를 약속하지 않고, 통제 가능한 입력 신호를 빠짐없이 넣는 것이 좋은 설계입니다.</p>
+
+<h2>정리</h2>
+
+<p>이번 구조의 핵심은 세 줄입니다.</p>
+
+<p>- Tistory는 원본이다. GitHub Pages는 검색엔진이 읽기 좋은 mirror surface다.</p>
+<p>- mirror에는 canonical, sitemap, feed, robots, verification file, IndexNow key를 둔다.</p>
+<p>- 발행 후에는 GitHub Actions가 mirror를 갱신하고 IndexNow로 변경을 알린다.</p>
+
+<p>블로그 자동화에서 “발행”은 끝이 아닙니다. 발행된 글이 검색엔진에게 발견될 수 있도록 공개 표면을 정리하는 것까지가 파이프라인입니다.</p>
+
+<p>OO 생태계의 북극성은 완전자율주행입니다. 글을 쓰고 올리는 것만 자동화하면 반쪽입니다. 글이 검색엔진에게 발견될 준비까지 끝났을 때, 비로소 콘텐츠 파이프라인이 한 바퀴 돈 것입니다.</p>
+    </article>
+
+    <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 0.85rem;">
+        <p>OO 기술 블로그 &mdash; AI Agent 생태계 구축기</p>
+        <p>원본: <a href="https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow">https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow</a></p>
+    </footer>
+</body>
+</html>
