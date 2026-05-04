@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCA AI Agent 사전학습 지도 — Stanford 강좌를 한국어로 읽기</title>
+    <meta name="description" content="CS230, CME295, CS336, CS329H, CS231n을 RCA AI Agent 관점에서 쉽게 풀어 읽는 한국어 사전학습 지도.">
+    <link rel="canonical" href="https://edolramba.github.io/posts/rca-stanford-prelearning-2026-05.html">
+    <style>
+        :root {
+            --ink: #172033;
+            --muted: #5b6472;
+            --line: #e3e7ee;
+            --paper: #fbfcff;
+            --card: #ffffff;
+            --accent: #0f766e;
+            --blue: #1d4ed8;
+            --gold: #a16207;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            line-height: 1.7;
+            word-break: keep-all;
+        }
+        header {
+            background: #fff;
+            border-bottom: 1px solid var(--line);
+            padding: 2rem 1.15rem 1.4rem;
+        }
+        main {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 1.2rem 1.15rem 3rem;
+        }
+        h1 {
+            font-size: 1.9rem;
+            line-height: 1.25;
+            margin: 0 0 0.6rem;
+            letter-spacing: 0;
+        }
+        h2 {
+            font-size: 1.35rem;
+            margin: 2rem 0 0.7rem;
+            letter-spacing: 0;
+        }
+        h3 {
+            font-size: 1.05rem;
+            margin: 1.2rem 0 0.4rem;
+        }
+        p { margin: 0.55rem 0; }
+        a { color: var(--blue); }
+        .meta, .muted { color: var(--muted); font-size: 0.92rem; }
+        .hero {
+            max-width: 840px;
+            margin: 0 auto;
+        }
+        .pill {
+            display: inline-block;
+            padding: 0.18rem 0.55rem;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            font-size: 0.82rem;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 0.7rem;
+        }
+        .box {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .quote {
+            border-left: 4px solid var(--accent);
+            background: #f0fdfa;
+            padding: 0.8rem 1rem;
+            margin: 1rem 0;
+            font-weight: 700;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 0.9rem;
+        }
+        .card strong { color: var(--accent); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.9rem 0;
+            background: #fff;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid var(--line);
+            padding: 0.55rem;
+            vertical-align: top;
+        }
+        th { background: #f8fafc; }
+        ul, ol { padding-left: 1.25rem; }
+        li { margin: 0.35rem 0; }
+        .dojo {
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+        .dojo strong { color: var(--gold); }
+        footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+        @media (max-width: 520px) {
+            h1 { font-size: 1.55rem; }
+            h2 { font-size: 1.18rem; }
+            table { font-size: 0.88rem; }
+            th, td { padding: 0.45rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="hero">
+            <span class="pill">모바일 학습판 · 2026-05-05</span>
+            <h1>RCA AI Agent 사전학습 지도</h1>
+            <p class="meta">Stanford 공개 강좌를 RCA/AI Agent 관점으로 다시 묶은 한국어 요약입니다. 영어 강의를 전부 보기 전에, 먼저 이 지도로 큰 산맥을 잡으면 됩니다.</p>
+        </div>
+    </header>
+
+    <main>
+        <section class="box">
+            <h2>10분 버전</h2>
+            <p>이번 자료의 메시지는 간단합니다.</p>
+            <div class="quote">AI를 겉으로만 쓰지 말고, 안쪽 엔진과 평가 방법까지 이해하자.</div>
+            <p>RCA Agent는 말 잘하는 챗봇이면 부족합니다. 장애 신호를 받고, 근거를 찾고, 원인 후보를 세우고, 틀린 후보를 버리고, 위험한 조치는 사람 승인 앞에서 멈춰야 합니다.</p>
+        </section>
+
+        <h2>다섯 강좌를 한 장으로</h2>
+        <div class="grid">
+            <article class="card">
+                <strong>CS230 · 기초 체력</strong>
+                <p>딥러닝 프로젝트를 망하지 않게 굴리는 법. error analysis, ablation, interpretability가 RCA 개선 습관으로 이어집니다.</p>
+            </article>
+            <article class="card">
+                <strong>CME295 · 세계지도</strong>
+                <p>Transformer, LLM, RAG, Agent, LLM-as-judge를 빠르게 훑는 지도입니다. 팀 공통 언어 만들기에 좋습니다.</p>
+            </article>
+            <article class="card">
+                <strong>CS336 · 엔진 분해</strong>
+                <p>토큰화, 모델 구조, GPU, inference, data, alignment까지 LLM을 밑바닥부터 보는 강좌입니다.</p>
+            </article>
+            <article class="card">
+                <strong>CS329H · 심판 수련</strong>
+                <p>사람 선호, reward, DPO, RLHF, 평가의 함정을 배웁니다. 좋은 RCA 보고서를 비교하는 기준이 됩니다.</p>
+            </article>
+            <article class="card">
+                <strong>CS231n · 눈 수련</strong>
+                <p>이미지, 영상, 대시보드를 보는 AI의 기초입니다. 로그 밖의 화면 증거를 다룰 때 중요합니다.</p>
+            </article>
+        </div>
+
+        <h2>왜 권위 있는 자료인가</h2>
+        <table>
+            <tr><th>자료</th><th>권위 포인트</th></tr>
+            <tr><td>CS230</td><td>Andrew Ng와 Kian Katanforoosh가 이끄는 Stanford Deep Learning 강좌. AI 교육의 표준에 가깝습니다.</td></tr>
+            <tr><td>CS231n</td><td>Fei-Fei Li가 연결된 컴퓨터비전 대표 강좌. ImageNet 이후 비전 딥러닝의 핵심 흐름을 담습니다.</td></tr>
+            <tr><td>CS336</td><td>Percy Liang, Tatsunori Hashimoto가 참여하는 LLM from scratch 강좌. 2026년 공식 페이지가 살아 있습니다.</td></tr>
+            <tr><td>CS329H</td><td>Machine Learning from Human Preferences. preference learning과 평가/정렬을 체계적으로 다룹니다.</td></tr>
+            <tr><td>CME295</td><td>Transformer와 LLM을 빠르게 정리하는 Stanford 강좌. RAG, Agent, LLM evaluation까지 이어집니다.</td></tr>
+        </table>
+
+        <h2>RCA Agent로 번역하면</h2>
+        <p>좋은 RCA는 멋진 문장이 아닙니다. 아래 5개가 맞아야 합니다.</p>
+        <ol>
+            <li>사실이 맞다.</li>
+            <li>로그, 메트릭, 트레이스 같은 근거가 있다.</li>
+            <li>원인 후보와 반증 과정이 보인다.</li>
+            <li>조치안이 안전하다.</li>
+            <li>운영자가 다음 행동을 바로 결정할 수 있다.</li>
+        </ol>
+
+        <section class="box dojo">
+            <h2>무협식 기억법</h2>
+            <p><strong>CS230</strong>은 기초 내공입니다. 자세가 무너지면 아무 기술도 안 통합니다.</p>
+            <p><strong>CME295</strong>는 천하 지도입니다. 어느 문파가 어디 있는지 알아야 길을 잃지 않습니다.</p>
+            <p><strong>CS336</strong>은 검을 분해하는 장인 수련입니다. 칼날, 손잡이, 무게중심을 알아야 진짜로 쓸 수 있습니다.</p>
+            <p><strong>CS329H</strong>는 비무장의 심판입니다. 누가 더 강한지 그냥 느낌으로 고르면 안 됩니다.</p>
+            <p><strong>CS231n</strong>은 천리안입니다. 글뿐 아니라 그림, 차트, 화면의 기세까지 봅니다.</p>
+        </section>
+
+        <h2>여행 중 5일 루틴</h2>
+        <ol>
+            <li><strong>Day 1</strong>: CME295로 LLM/RAG/Agent/Eval 지도를 잡습니다.</li>
+            <li><strong>Day 2</strong>: CS336으로 tokenization, inference, data 품질 감각을 잡습니다.</li>
+            <li><strong>Day 3</strong>: CS329H로 좋은 RCA 보고서의 비교 기준을 만듭니다.</li>
+            <li><strong>Day 4</strong>: CS231n으로 dashboard, chart, topology를 보는 AI를 상상합니다.</li>
+            <li><strong>Day 5</strong>: Alert → Evidence → Hypothesis → Tool → Report → Approval 흐름으로 합칩니다.</li>
+        </ol>
+
+        <h2>꼭 외울 쉬운 단어</h2>
+        <table>
+            <tr><th>용어</th><th>쉬운 말</th></tr>
+            <tr><td>Token</td><td>AI가 읽는 글자 조각</td></tr>
+            <tr><td>Embedding</td><td>글자 조각을 숫자 좌표로 바꾼 것</td></tr>
+            <tr><td>Attention</td><td>지금 답할 때 어디를 더 봐야 하는지 고르는 힘</td></tr>
+            <tr><td>RAG</td><td>외워서 답하지 말고 문서를 찾아보고 답하는 방식</td></tr>
+            <tr><td>Agent</td><td>목표를 받고 도구를 쓰며 여러 단계로 일하는 AI</td></tr>
+            <tr><td>DPO</td><td>두 답 중 어떤 답이 더 좋은지 비교해 모델을 조정하는 방식</td></tr>
+            <tr><td>Grounding</td><td>답변이 실제 근거에 붙어 있는 상태</td></tr>
+        </table>
+
+        <h2>2026년에 추가로 봐야 할 것</h2>
+        <ul>
+            <li><strong>MCP / A2A</strong>: Agent가 도구와 다른 Agent와 연결되는 표준 흐름입니다.</li>
+            <li><strong>LLM-as-judge bias</strong>: AI 심판도 편향됩니다. 사람 기준 golden set이 필요합니다.</li>
+            <li><strong>Reasoning RL / GRPO</strong>: 검증 가능한 문제에서 reasoning model이 강해진 이유입니다.</li>
+            <li><strong>Serving systems</strong>: 실서비스는 정확도만이 아니라 latency, cost, throughput 싸움입니다.</li>
+            <li><strong>PII / audit trail</strong>: 운영 로그는 민감 데이터입니다. 마스킹과 추적이 기본입니다.</li>
+        </ul>
+
+        <h2>원본 자료</h2>
+        <ul>
+            <li><a href="https://cs230.stanford.edu/">Stanford CS230: Deep Learning</a></li>
+            <li><a href="https://cme295.stanford.edu/">Stanford CME295: Transformers & Large Language Models</a></li>
+            <li><a href="https://cs336.stanford.edu/">Stanford CS336: Language Modeling from Scratch</a></li>
+            <li><a href="https://web.stanford.edu/class/cs329h/">Stanford CS329H: Machine Learning from Human Preferences</a></li>
+            <li><a href="https://mlhp.stanford.edu/">Machine Learning from Human Preferences textbook</a></li>
+            <li><a href="https://cs231n.stanford.edu/">Stanford CS231n: Deep Learning for Computer Vision</a></li>
+            <li><a href="https://arxiv.org/abs/2305.18290">Direct Preference Optimization</a></li>
+            <li><a href="https://modelcontextprotocol.io/specification/2025-11-25">Model Context Protocol specification</a></li>
+            <li><a href="https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/">Google Agent2Agent Protocol announcement</a></li>
+        </ul>
+
+        <footer>
+            <p>공개 페이지에는 내부 자료명과 비공개 맥락을 제외했습니다. 강의 transcript 전체는 저작권 리스크 때문에 재배포하지 않고, 공개 링크와 요약 중심으로만 정리했습니다.</p>
+            <p><a href="../index.html">OO 기술 블로그 홈으로</a></p>
+        </footer>
+    </main>
+</body>
+</html>
