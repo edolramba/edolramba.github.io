@@ -5,19 +5,8 @@
     <link>https://onyourside22.tistory.com</link>
     <description>OpenOrchestrator 생태계의 설계와 구현을 기록하는 기술 블로그</description>
     <language>ko</language>
-    <lastBuildDate>Tue, 05 May 2026 00:00:00 +0900</lastBuildDate>
+    <lastBuildDate>Sun, 03 May 2026 16:07:59 +0000</lastBuildDate>
     <atom:link href="https://edolramba.github.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <item>
-      <title>RCA AI Agent 사전학습 지도 — Stanford 강좌를 한국어로 읽기</title>
-      <link>https://edolramba.github.io/posts/rca-stanford-prelearning-2026-05.html</link>
-      <description>CS230, CME295, CS336, CS329H, CS231n을 RCA AI Agent 관점으로 다시 묶은 모바일용 한국어 사전학습 지도입니다.</description>
-      <pubDate>Tue, 05 May 2026 00:00:00 +0900</pubDate>
-      <guid isPermaLink="true">https://edolramba.github.io/posts/rca-stanford-prelearning-2026-05.html</guid>
-      <category>AI</category>
-      <category>RCA</category>
-      <category>Agentic-AI</category>
-      <category>Stanford</category>
-    </item>
     <item>
       <title>Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow</title>
       <link>https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow</link>
