@@ -6,13 +6,13 @@
     <title>Gemma 4 글을 이해하기 위한 Attention 4컷 정리 — OO 기술 블로그</title>
     <meta name="description" content="Attention은 LLM이 긴 문서·코드·로그 중 지금 답에 필요한 단서를 더 강하게 참고하게 하는 구조다. Gemma 4의 실무 포인트는 이 Attention 비용을 줄여 긴 문맥을 더 싸게 다루는 데 있다.">
     <meta name="keywords" content="Gemma4, Attention, LLM, OpenClaw, LocalAI, AgenticAI, Easy">
-    <link rel="canonical" href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC">
+    <link rel="canonical" href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1">
 
     <!-- Open Graph -->
     <meta property="og:title" content="Gemma 4 글을 이해하기 위한 Attention 4컷 정리">
     <meta property="og:description" content="Attention은 LLM이 긴 문서·코드·로그 중 지금 답에 필요한 단서를 더 강하게 참고하게 하는 구조다. Gemma 4의 실무 포인트는 이 Attention 비용을 줄여 긴 문맥을 더 싸게 다루는 데 있다.">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC">
+    <meta property="og:url" content="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1">
     <meta property="og:site_name" content="OO 기술 블로그">
     <meta property="og:image" content="https://edolramba.github.io/assets/gemma-4-글을-이해하기-위한-attention-4컷-정리.png">
     <meta name="twitter:image" content="https://edolramba.github.io/assets/gemma-4-글을-이해하기-위한-attention-4컷-정리.png">
@@ -64,16 +64,18 @@
         </div>
 
         <div class="canonical-notice">
-            이 글의 원본은 <a href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC">Tistory 블로그</a>에서 확인할 수 있습니다.
+            이 글의 원본은 <a href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1">Tistory 블로그</a>에서 확인할 수 있습니다.
         </div>
 
         <img class="hero-image" src="../assets/gemma-4-글을-이해하기-위한-attention-4컷-정리.png" alt="Gemma 4 글을 이해하기 위한 Attention 4컷 정리">
 
         <blockquote>**AI > Easy Concept** | 2026.05</blockquote>
 <p>></p>
-<blockquote>**이 글의 본문은 위 4컷 인포그래픽입니다.** 스크롤을 더 내리기 전에 한 번 천천히 읽어 주세요.</blockquote>
+<blockquote>**이 글의 본문은 아래 4컷 인포그래픽입니다.** 스크롤을 더 내리기 전에 한 번 천천히 읽어 주세요.</blockquote>
 <p>></p>
 <blockquote>글은 인포그래픽을 보충하는 짧은 부연일 뿐입니다.</blockquote>
+
+<p>![Gemma 4 글을 읽기 위한 Attention 4컷 개념도](https://edolramba.github.io/assets/gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC.png)</p>
 
 <hr>
 
@@ -146,7 +148,7 @@
 
     <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 0.85rem;">
         <p>OO 기술 블로그 &mdash; AI Agent 생태계 구축기</p>
-        <p>원본: <a href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC">https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC</a></p>
+        <p>원본: <a href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1">https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1</a></p>
     </footer>
 </body>
 </html>
