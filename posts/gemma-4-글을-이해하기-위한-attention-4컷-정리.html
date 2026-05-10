@@ -6,13 +6,13 @@
     <title>Gemma 4 글을 이해하기 위한 Attention 4컷 정리 — OO 기술 블로그</title>
     <meta name="description" content="Attention은 LLM이 긴 문서·코드·로그 중 지금 답에 필요한 단서를 더 강하게 참고하게 하는 구조다. Gemma 4의 실무 포인트는 이 Attention 비용을 줄여 긴 문맥을 더 싸게 다루는 데 있다.">
     <meta name="keywords" content="Gemma4, Attention, LLM, OpenClaw, LocalAI, AgenticAI, Easy">
-    <link rel="canonical" href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1">
+    <link rel="canonical" href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC">
 
     <!-- Open Graph -->
     <meta property="og:title" content="Gemma 4 글을 이해하기 위한 Attention 4컷 정리">
     <meta property="og:description" content="Attention은 LLM이 긴 문서·코드·로그 중 지금 답에 필요한 단서를 더 강하게 참고하게 하는 구조다. Gemma 4의 실무 포인트는 이 Attention 비용을 줄여 긴 문맥을 더 싸게 다루는 데 있다.">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1">
+    <meta property="og:url" content="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC">
     <meta property="og:site_name" content="OO 기술 블로그">
 
 
@@ -57,97 +57,80 @@
         <h1>Gemma 4 글을 이해하기 위한 Attention 4컷 정리</h1>
         <div class="meta">
             <time datetime="2026-05-11">2026-05-11</time> &middot;
-            7분 읽기 &middot;
+            5분 읽기 &middot;
             Gemma4, Attention, LLM, OpenClaw, LocalAI
         </div>
 
         <div class="canonical-notice">
-            이 글의 원본은 <a href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1">Tistory 블로그</a>에서 확인할 수 있습니다.
+            이 글의 원본은 <a href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC">Tistory 블로그</a>에서 확인할 수 있습니다.
         </div>
 
 
-        <p>AI > Easy Concept | 2026.05</p>
+        <blockquote>**AI > Easy Concept** | 2026.05</blockquote>
+<p>></p>
+<blockquote>**이 글의 본문은 위 4컷 인포그래픽입니다.** 스크롤을 더 내리기 전에 한 번 천천히 읽어 주세요.</blockquote>
+<p>></p>
+<blockquote>글은 인포그래픽을 보충하는 짧은 부연일 뿐입니다.</blockquote>
 
-<p>회의 중에 누군가 "아까 그 부분 다시 한번 설명해주실래요?"라고 묻는다. 우리는 회의 첫 발언부터 처음으로 되감지 않는다. "그 부분" 근처만 머릿속에서 강하게 떠올리고, 나머지는 흐릿하게 둔다. 듣고 있을 때도 비슷하다. 모든 발언을 같은 무게로 기억하는 게 아니라, 지금 답을 만드는 데 필요한 발언에 더 큰 비중을 두면서 듣는다.</p>
+<hr>
 
-<p>LLM(글을 만들어주는 큰 AI 모델, Large Language Model)이 일하는 방식도 비슷하다. 그리고 그 "지금 필요한 부분에 더 큰 비중을 두는 구조"의 이름이 Attention이다.</p>
+<h2>60초 멘탈 모델: 회의에서 "아까 그 부분"</h2>
 
-<p>이 글은 최근 화제가 된 Gemma 4(구글 DeepMind에서 공개한 작은 LLM 시리즈) 관련 글을 읽다가 자꾸 등장하는 Attention이라는 단어를 정리해 본 메모다. 읽으면 알게 되는 것은 세 가지다.</p>
+<p>회의 중에 누군가 "아까 그 부분 다시 한번 설명해주실래요?"라고 묻습니다. 우리는 회의 첫 발언부터 머릿속에서 처음으로 되감지 않습니다. "그 부분" 근처만 강하게 떠올리고 나머지는 흐릿하게 둡니다.</p>
 
-<p>- Attention이 단순한 "기억력"이 아니라 "현재 질문에 필요한 근거를 고르는 구조"인 이유</p>
-<p>- 이 구조가 왜 긴 문서나 로그를 다루는 업무에서 비용·속도와 직결되는지</p>
-<p>- Gemma 4 같은 작은 LLM이 회사 내부 환경(보안, 로컬 실행, 비용 통제)에 더 자주 거론되는 이유</p>
+<p>LLM(글을 만들어주는 큰 AI 모델, Large Language Model)이 일하는 방식도 비슷합니다. 그리고 그 "지금 필요한 부분에 더 큰 비중을 두는 구조"의 이름이 <strong>Attention</strong>입니다.</p>
 
-<p>전공자 수준의 수식 이야기는 안 한다. 공식 문서와 논문은 글 끝에 한 줄로 정리해 두었다.</p>
+<p>위 인포그래픽 4컷이 이 한 문장을 그림으로 풀어 놓은 것입니다.</p>
 
-<h2>1컷. 입력이 길어질수록 단서도 섞인다</h2>
+<h2>4컷 짧은 부연</h2>
 
-<p>LLM에게 질문할 때 우리는 보통 한두 줄짜리 질문만 던지지 않는다. 실제 업무에서는 문서 전체, 로그 수백 줄, 이전 대화, 정책 문서, 그리고 마지막에 "그래서 이거 어떻게 처리하지?"라는 한 줄 질문이 같이 들어간다.</p>
+<p><strong>1컷 — 입력이 길어질수록 단서도 섞입니다.</strong> 질문 하나에도 문서, 코드, 로그, 이전 대화, 정책이 함께 들어옵니다. 토큰(token, 모델이 한 번에 다루는 글자 묶음) 1만 개 중 답에 결정적인 토큰은 수십~수백 개뿐입니다. 나머지는 배경입니다.</p>
 
-<p>LLM 입장에서 이 모든 입력은 단어보다 잘게 쪼갠 토큰(token, 모델이 한 번에 다루는 글자 묶음)의 긴 줄이다. 토큰이 1만 개 들어가면 그중 답에 결정적인 토큰은 보통 수십~수백 개뿐이다. 나머지는 배경이다.</p>
+<p><strong>2컷 — Attention은 "지금 답에 필요한" 토큰에 가중치를 줍니다.</strong> 정답 근거에는 높은 가중치, 중요 문맥은 낮게, 무관한 토큰은 거의 무시. 그래서 Attention은 "기억 장치"라기보다 "선택 장치"에 가깝습니다.</p>
 
-<p>여기서 중요한 점은, 입력이 길다고 답이 좋아지지는 않는다는 것이다. 컨텍스트 창(모델이 한 번에 받을 수 있는 입력 길이)이 충분해도, 모델이 결정적인 토큰을 잘 골라야 한다. RAG(검색 결과를 LLM에 같이 넣어주는 패턴, Retrieval-Augmented Generation)나 Agent(LLM이 도구를 반복적으로 호출하며 일하는 형태) 설계에서도 무작정 많이 넣기보다 "필요한 근거만 정리해서 넣기"가 핵심인 이유가 여기 있다.</p>
+<p><strong>3컷 — 문제는, 긴 입력일수록 계산이 비싸진다는 점입니다.</strong> Transformer(Attention 구조를 처음 제안한 모델 아키텍처)의 기본 형태에서는 입력이 2배 길어지면 계산량은 4배가 됩니다. 긴 컨텍스트가 곧 공짜 기억력이 아닌 이유입니다.</p>
 
-<h2>2컷. Attention은 "지금 필요한" 토큰에 무게를 준다</h2>
+<p><strong>4컷 — Gemma 4의 포인트는 "싸게 오래 보기"입니다.</strong> 가까운 토큰은 촘촘히, 먼 토큰은 필요한 지점에서만 전체로 보는 구조(Sliding Window 등)로 비용을 줄입니다. 그래서 핵심은 모델 크기 자체가 아니라 "긴 업무 문맥을 얼마나 싸게 다루는가"입니다.</p>
 
-<p>Attention이 하는 일은 단순하다 — <strong>답을 만드는 매 시점마다, 입력의 어느 토큰을 더 강하게 참고할지 가중치를 매긴다.</strong></p>
+<h2>인포그래픽 하단 용어 박스 풀이</h2>
 
-<p>회의 비유로 돌아가자. 사용자가 "Gemma 4의 효율이 우리 회사에 왜 중요한가?"라고 묻는 순간, 모델은 입력 안에서 "회사", "비용", "로컬", "보안" 같은 토큰에 더 높은 가중치를 주고, "어제 점심 메뉴" 같은 토큰은 흘려보낸다.</p>
+<p>인포그래픽 맨 아래 "글에서 나오는 Attention 계열 용어" 6개를 한 번 더 풀어 둡니다.</p>
 
-<p>그래서 Attention은 "기억 장치"라기보다 "선택 장치"에 가깝다. 모델이 이전 토큰을 모두 보긴 하지만, 모든 토큰을 같은 비중으로 보지는 않는다.</p>
-
-<h2>3컷. 문제는 — 긴 입력일수록 계산이 비싸진다</h2>
-
-<p>Transformer(Attention 구조를 처음 제안한 모델 아키텍처) 기본 형태에서는 모든 토큰이 다른 모든 토큰을 폭넓게 참고한다. 입력이 1만 토큰이면 1억 쌍의 관계를 계산하는 식이다. 입력이 2배 길어지면 계산량은 4배가 된다.</p>
-
-<p>회사 환경에서 이 문제가 바로 비용과 속도로 이어진다.</p>
-
-<p>| 상황 | 무엇이 늘어나나 |</p>
+<p>| 용어 | 풀이 |</p>
 <p>|---|---|</p>
-<p>| 장애 로그 수천 줄 + 운영 매뉴얼 + 과거 장애 이력을 한 번에 분석 | 계산량, 응답 지연 |</p>
-<p>| 사내 정책 문서 + 회의록 + 최근 1년치 메일을 검색해서 답변 | 메모리 사용량, GPU 비용 |</p>
-<p>| Agent가 도구 호출 결과를 보고 다음 행동을 결정 (반복) | 호출 횟수만큼 비용이 곱셈 |</p>
+<p>| <strong>Local Attention</strong> | 가까운 토큰만 봐서 빠르고 싸게 처리합니다 |</p>
+<p>| <strong>Sliding Window</strong> | 정해진 크기의 창을 밀면서 주변 문맥만 봅니다 |</p>
+<p>| <strong>Global Attention</strong> | 중간중간 전체 문맥을 다시 확인해 장거리 단서를 잇습니다 |</p>
+<p>| <strong>Attention Mix</strong> | Local로 비용을 줄이고 Global로 전체 맥락을 보완합니다 |</p>
+<p>| <strong>GQA / KV 공유</strong> | 여러 질문 헤드가 같은 기억 공간을 공유해 메모리를 줄입니다 |</p>
+<p>| <strong>결국 핵심</strong> | 긴 문맥을 더 싸게 오래 보는 구조가 로컬 Agent와 직결됩니다 |</p>
 
-<p>긴 입력이 곧 공짜 기억력이 아닌 이유다.</p>
+<p>Gemma 4 관련 글에서 이 단어들이 등장하면 "Attention 비용을 줄이려고 하는 시도"라고 한 줄로 묶어서 보면 됩니다.</p>
 
-<h2>4컷. Gemma 4의 포인트는 "싸게 오래 보기"</h2>
+<h2>회사 환경에서 이게 왜 의미 있는가</h2>
 
-<p>Gemma 4 같은 작은 LLM 시리즈에서 주목할 지점은 모델 크기 그 자체가 아니라, <strong>Attention을 더 효율적으로 다루는 방향의 최적화</strong>다. 가까운 토큰은 촘촘히 보고, 먼 토큰은 필요한 지점에서만 전체로 확인하는 식의 구조가 그것이다.</p>
-
-<p>이 방향이 회사 환경에서 의미 있는 이유는 세 가지다.</p>
+<p>Gemma 4 같은 작은 LLM 시리즈가 효율적인 Attention 구조를 가지면 회사 환경에서 세 가지가 가능해집니다.</p>
 
 <p>| 항목 | 작은 LLM이 더 효율적이면 가능해지는 것 |</p>
 <p>|---|---|</p>
-<p>| 로컬 실행성 | 사내 GPU나 노트북에서 직접 돌릴 수 있다 |</p>
-<p>| 비용 통제 | 글 한 편당 호출 비용이 줄어든다 |</p>
-<p>| 내부 데이터 처리 | 사내 데이터를 외부로 안 보내고 처리할 수 있다 |</p>
+<p>| 로컬 실행성 | 사내 GPU나 노트북에서 직접 돌릴 수 있습니다 |</p>
+<p>| 비용 통제 | 글 한 편당, 응답 한 번당 호출 비용이 줄어듭니다 |</p>
+<p>| 내부 데이터 처리 | 사내 데이터를 외부로 안 보내고 처리할 수 있습니다 |</p>
 
-<p>벤치마크 점수보다 이 세 가지가 회사 도입 결정에서 더 중요하다.</p>
+<p>벤치마크 점수보다 이 세 가지가 회사 도입 결정에서 더 중요합니다.</p>
 
-<h2>Agent로 일하는 환경에서 더 무거워진다</h2>
+<h2>단, Attention 효율 하나로 모든 게 풀리진 않습니다</h2>
 
-<p>Agent라는 단어를 한 번 더 풀어두자. Agent는 LLM이 한 번의 답만 만드는 게 아니라, <strong>계획을 세우고 → 도구를 호출하고 → 결과를 다시 읽고 → 다음 행동을 고르는 루프</strong>를 반복하는 형태로 일하는 것이다. 코드 작성, 자료 정리, 파일 분류 같은 작업이 여기 해당한다.</p>
+<p>Gemma 4가 Attention을 효율적으로 다룬다고 해서 바로 회사 Agent(LLM이 도구를 반복적으로 호출하며 일하는 형태)에 투입할 수 있다는 뜻은 아닙니다. 실제 도입에서는 다음 항목들도 같이 봐야 합니다.</p>
 
-<p>이 루프 한 바퀴마다 Attention 비용이 새로 발생한다. Attention 비용이 무거우면 루프 전체가 무거워진다. 반대로 Attention 효율이 좋아지면 작은 모델도 긴 작업 문맥을 감당할 가능성이 생긴다.</p>
-
-<p>이 지점이 로컬 LLM, 폐쇄망/온프레미스(사내 서버에서만 돌리는 환경) 운영, 비용 통제, 개인정보 보호 같은 회사 요구와 연결된다.</p>
-
-<h2>단, Attention 효율 하나로 모든 게 풀리진 않는다</h2>
-
-<p>Gemma 4가 Attention을 효율적으로 다룬다고 해서 바로 회사 Agent에 투입할 수 있다는 뜻은 아니다. 실제 도입에서는 다음 항목들도 같이 검증해야 한다.</p>
-
-<p>- 도구 호출(tool calling, 모델이 외부 도구를 부르는 기능)이 안정적인가 — 모델이 도구 이름과 인자를 일관되게 만드는가</p>
+<p>- 도구 호출(tool calling, 모델이 외부 도구를 부르는 기능)이 안정적인가 — 도구 이름과 인자를 일관되게 만드는가</p>
 <p>- JSON 같은 정해진 형식의 출력이 일관된가</p>
 <p>- 사내 데이터 접근 권한이 분리되는가</p>
-<p>- 평가 체계와 장애 시 대체 경로(fallback, 앞 단계 실패 시 자동으로 떨어지는 경로)가 있는가</p>
+<p>- 평가 체계와 장애 시 대체 경로(fallback)가 있는가</p>
 
-<p>결론은 단순하다. Attention 최적화는 Gemma 4류 모델이 보안·비용·로컬 실행 면에서 더 실용적으로 보이는 기술적 이유다. 다만 회사 환경에서는 모델 성능뿐 아니라 운영 안정성과 통제 가능성을 함께 봐야 한다.</p>
+<h2>한 줄 정리</h2>
 
-<h2>정리</h2>
-
-<p>Attention은 LLM이 긴 입력 중 지금 답에 필요한 부분을 더 강하게 참고하도록 가중치를 주는 구조다. 긴 문서나 로그를 모두 같은 무게로 보면 계산 비용이 커지고 중요한 근거가 묻히기 쉽다. Gemma 4 같은 작은 LLM 시리즈가 보여주는 방향은 이 Attention 비용을 줄여 긴 문맥을 더 싸게 다루는 쪽이다.</p>
-
-<p>회사 관점에서는 모델 크기보다 — 로컬에서 돌릴 수 있는가, 비용을 통제할 수 있는가, 사내 데이터를 안 보내고 쓸 수 있는가 — 가 진짜 의사결정 지점이다. Attention은 기초 개념이지만, 그 효율이 곧 회사 AI 도입의 비용 구조와 직접 맞닿아 있다.</p>
+<p>Attention은 LLM이 긴 입력 중 지금 답에 필요한 부분을 더 강하게 참고하는 구조이고, Gemma 4 같은 작은 LLM의 방향성은 이 Attention 비용을 줄여 "긴 문맥을 더 싸게 오래 보는 것"입니다. 회사 입장에서는 모델 크기보다 로컬 실행성·비용·내부 데이터 처리 가능성이 진짜 의사결정 지점입니다.</p>
 
 <h2>참고</h2>
 
@@ -160,7 +143,7 @@
 
     <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 0.85rem;">
         <p>OO 기술 블로그 &mdash; AI Agent 생태계 구축기</p>
-        <p>원본: <a href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1">https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC-1</a></p>
+        <p>원본: <a href="https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC">https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC</a></p>
     </footer>
 </body>
 </html>
