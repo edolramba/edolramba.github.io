@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블로그 대표이미지 만드는 일을 Codex CLI에 맡긴 이야기 — fallback 사다리는 그대로 두고 — OO 기술 블로그</title>
+    <meta name="description" content="Tistory 자동 발행 파이프라인의 대표이미지 단계를 LLM 기반 이미지 생성 도구로 1순위 교체하면서 기존 fallback 사다리는 그대로 두고 회귀 위험을 최소화한 작업 회고.">
+    <meta name="keywords" content="Agentic-AI, OpenOrchestrator, Tistory, Automation, Thumbnail, Image-Generation, Fallback, Vibe-Coding">
+    <link rel="canonical" href="https://onyourside22.tistory.com/entry/%EB%B8%94%EB%A1%9C%EA%B7%B8-%EB%8C%80%ED%91%9C%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%A7%8C%EB%93%9C%EB%8A%94-%EC%9D%BC%EC%9D%84-Codex-CLI%EC%97%90-%EB%A7%A1%EA%B8%B4-%EC%9D%B4%EC%95%BC%EA%B8%B0-%E2%80%94-fallback-%EC%82%AC%EB%8B%A4%EB%A6%AC%EB%8A%94-%EA%B7%B8%EB%8C%80%EB%A1%9C-%EB%91%90%EA%B3%A0">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="블로그 대표이미지 만드는 일을 Codex CLI에 맡긴 이야기 — fallback 사다리는 그대로 두고">
+    <meta property="og:description" content="Tistory 자동 발행 파이프라인의 대표이미지 단계를 LLM 기반 이미지 생성 도구로 1순위 교체하면서 기존 fallback 사다리는 그대로 두고 회귀 위험을 최소화한 작업 회고.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://onyourside22.tistory.com/entry/%EB%B8%94%EB%A1%9C%EA%B7%B8-%EB%8C%80%ED%91%9C%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%A7%8C%EB%93%9C%EB%8A%94-%EC%9D%BC%EC%9D%84-Codex-CLI%EC%97%90-%EB%A7%A1%EA%B8%B4-%EC%9D%B4%EC%95%BC%EA%B8%B0-%E2%80%94-fallback-%EC%82%AC%EB%8B%A4%EB%A6%AC%EB%8A%94-%EA%B7%B8%EB%8C%80%EB%A1%9C-%EB%91%90%EA%B3%A0">
+    <meta property="og:site_name" content="OO 기술 블로그">
+    <meta property="og:image" content="https://edolramba.github.io/assets/블로그-대표이미지-만드는-일을-codex-cli에-맡긴-이야기-fallback-사다리는-그대로-두고.png">
+    <meta name="twitter:image" content="https://edolramba.github.io/assets/블로그-대표이미지-만드는-일을-codex-cli에-맡긴-이야기-fallback-사다리는-그대로-두고.png">
+
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="블로그 대표이미지 만드는 일을 Codex CLI에 맡긴 이야기 — fallback 사다리는 그대로 두고">
+    <meta name="twitter:description" content="Tistory 자동 발행 파이프라인의 대표이미지 단계를 LLM 기반 이미지 생성 도구로 1순위 교체하면서 기존 fallback 사다리는 그대로 두고 회귀 위험을 최소화한 작업 회고.">
+
+    <!-- Article metadata -->
+    <meta property="article:published_time" content="2026-05-10">
+    <meta property="article:section" content="Vibe Coding">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            line-height: 1.8;
+            color: #333;
+        }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.5rem; margin-top: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.3rem; }
+        h3 { font-size: 1.2rem; margin-top: 1.5rem; }
+        pre { background: #f6f8fa; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+        code { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+        blockquote { border-left: 4px solid #dfe2e5; margin: 1rem 0; padding: 0.5rem 1rem; color: #6a737d; }
+        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        th, td { border: 1px solid #dfe2e5; padding: 0.5rem; text-align: left; }
+        th { background: #f6f8fa; }
+        .meta { color: #666; font-size: 0.9rem; margin-bottom: 2rem; }
+        .hero-image { width: 100%; height: auto; border-radius: 6px; margin: 0 0 2rem 0; }
+        .canonical-notice { background: #fff3cd; padding: 0.75rem; border-radius: 4px; margin-bottom: 2rem; font-size: 0.85rem; }
+        a { color: #0366d6; }
+        nav { margin-bottom: 2rem; }
+    </style>
+</head>
+<body>
+    <nav><a href="index.html">&larr; OO 기술 블로그 시리즈 목록</a></nav>
+
+    <article>
+        <h1>블로그 대표이미지 만드는 일을 Codex CLI에 맡긴 이야기 — fallback 사다리는 그대로 두고</h1>
+        <div class="meta">
+            <time datetime="2026-05-10">2026-05-10</time> &middot;
+            9분 읽기 &middot;
+            Agentic-AI, OpenOrchestrator, Tistory, Automation, Thumbnail
+        </div>
+
+        <div class="canonical-notice">
+            이 글의 원본은 <a href="https://onyourside22.tistory.com/entry/%EB%B8%94%EB%A1%9C%EA%B7%B8-%EB%8C%80%ED%91%9C%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%A7%8C%EB%93%9C%EB%8A%94-%EC%9D%BC%EC%9D%84-Codex-CLI%EC%97%90-%EB%A7%A1%EA%B8%B4-%EC%9D%B4%EC%95%BC%EA%B8%B0-%E2%80%94-fallback-%EC%82%AC%EB%8B%A4%EB%A6%AC%EB%8A%94-%EA%B7%B8%EB%8C%80%EB%A1%9C-%EB%91%90%EA%B3%A0">Tistory 블로그</a>에서 확인할 수 있습니다.
+        </div>
+
+        <img class="hero-image" src="../assets/블로그-대표이미지-만드는-일을-codex-cli에-맡긴-이야기-fallback-사다리는-그대로-두고.png" alt="블로그 대표이미지 만드는 일을 Codex CLI에 맡긴 이야기 — fallback 사다리는 그대로 두고">
+
+        <p>OpenOrchestrator 시리즈 8편 | 2026.05</p>
+
+<p>블로그 자동 발행 파이프라인을 만들 때 마지막까지 어색하게 남아 있는 단계가 하나 있었다. 글은 자동으로 쓰이고, 카테고리도 자동으로 붙고, 발행도 자동인데, 대표이미지(썸네일)만 늘 어딘가 어색했다. 글 제목을 박은 평범한 그라데이션 이미지가 매번 따라붙는 식이었다.</p>
+
+<p>이번 글은 그 마지막 어색함을 어떻게 줄였는지에 대한 기록이다. 핵심은 두 가지다.</p>
+
+<p>- 대표이미지 생성을 LLM 기반의 이미지 생성 도구에 1순위로 맡긴다.</p>
+<p>- 그 도구가 실패해도 기존에 쓰던 단순 fallback이 그대로 동작하게 둔다.</p>
+
+<p>결과만 먼저 적자면, 같은 글 제목을 넣었을 때 이전에는 250KB짜리 단조로운 그라데이션 + 영문 박스 텍스트가 나왔다면, 이후에는 1.3MB짜리 한글 제목이 정확히 렌더된 모던한 인포그래픽 스타일 이미지가 나온다. 약 70초가 더 걸리지만, 마지막 사람 손이 닿던 단계 하나가 사라졌다.</p>
+
+<h2>왜 fallback 사다리만 있었나</h2>
+
+<p>원래 썸네일 생성 모듈에는 세 단계의 fallback이 있었다.</p>
+
+<pre><code>
+1) 내부 이미지 API (localhost)
+   ↓ 실패하면
+2) OpenAI 이미지 직호출 (유료, 옵션)
+   ↓ 실패하면
+3) PIL gradient + 텍스트 박스
+</code></pre>
+
+<p>이 사다리는 안전했다. 어떤 환경에서도 무언가는 나왔다. 문제는 1단계가 거의 항상 down 상태고, 2단계는 옵션 플래그가 명시적으로 켜져야 동작했고, 그래서 실제로는 매번 3단계로 떨어지고 있었다는 점이다.</p>
+
+<p>3단계가 만들어주는 이미지는 “이미지 자리는 채워졌다”는 의미는 있지만, 글의 분위기를 잡아주거나 클릭률을 높여주지는 못했다. 글 본문 품질이 올라갈수록 이 자동 썸네일이 글의 인상을 깎고 있다는 느낌이 점점 강해졌다.</p>
+
+<h2>무엇을 1순위로 두는가</h2>
+
+<p>그래서 사다리 맨 위에 새 단계를 한 칸 끼워넣었다.</p>
+
+<pre><code>
+0) LLM 이미지 생성 CLI (1순위, 새로 추가)
+   ↓ 실패하면
+1) 내부 이미지 API
+   ↓ 실패하면
+2) OpenAI 이미지 직호출
+   ↓ 실패하면
+3) PIL gradient
+</code></pre>
+
+<p>핵심 원칙은 단순하다. 새 경로가 잘 동작하면 기존 경로는 한 번도 호출되지 않는다. 새 경로가 어떤 이유로든 실패하면 기존 경로가 그대로 잡힌다. 즉 “업그레이드”가 아니라 “덧붙이기”다. 회귀 위험을 최소화하기 위한 형태다.</p>
+
+<h2>한 줄짜리 비상정지 스위치</h2>
+
+<p>새 경로가 망가져도 사용자가 즉시 우회할 수 있도록, 환경변수 한 줄로 새 경로를 강제 우회하게 했다.</p>
+
+<pre><code>
+OO_THUMB_NO_CODEX=1
+</code></pre>
+
+<p>이 값이 1, true, yes 중 하나로 설정되어 있으면 새 경로는 아예 시도조차 하지 않고 바로 1단계로 떨어진다. 운영 중 이상 징후가 보이면 코드를 되돌리지 않고 환경변수만 바꾸면 된다.</p>
+
+<p>이런 작은 비상정지 스위치는 자동화 시스템에서 의외로 자주 도움이 된다. 나중에 “저번 주 글 썸네일이 왜 안 좋게 나왔지?” 같은 회고를 할 때, “그날만 이 변수가 1이었어요” 같은 식으로 원인을 빠르게 좁힐 수 있기 때문이다.</p>
+
+<h2>도중에 만난 Windows 함정</h2>
+
+<p>그런데 새 경로를 처음 돌렸을 때 PNG 파일이 안 만들어졌다. 로그를 보니 이미지 생성 도구는 호출됐고, 토큰도 충분히 썼고, 그런데 “저장 단계”에서 문제가 생기고 있었다.</p>
+
+<p>원인은 운영체제 환경에 있었다. 이미지 생성 도구는 PNG를 자기 캐시 폴더에 먼저 만들고, 그 다음 “이 PNG를 사용자가 지정한 경로로 복사해줘” 단계를 별도로 수행한다. 이 마지막 복사 단계가 Windows의 PowerShell constrained language mode 정책과 충돌하고 있었다.</p>
+
+<p>결과적으로 PNG 자체는 잘 만들어졌지만, 우리가 지정한 경로에는 도착하지 못한 채 끝나는 패턴이었다. 도구 입장에서는 “복사가 실패했다”고 보고하지만, PNG는 캐시 폴더에 멀쩡히 살아 있다.</p>
+
+<h2>우회: 캐시에서 직접 가져오기</h2>
+
+<p>해결은 단순했다. 도구가 우리 쪽 경로에 PNG를 못 갖다놓았으면, 우리가 직접 가져오면 된다.</p>
+
+<p>흐름은 이렇게 잡았다.</p>
+
+<p>1. 새 경로를 끝까지 돌리고, 우리가 지정한 저장 경로를 먼저 확인한다.</p>
+<p>2. 그 위치에 PNG가 있으면 그대로 쓴다.</p>
+<p>3. 없으면 도구의 표준 출력에서 “세션 식별자”를 찾아낸다.</p>
+<p>4. 그 식별자에 해당하는 캐시 폴더로 가서 PNG를 찾고, 우리가 원래 원했던 경로로 직접 복사한다.</p>
+<p>5. 그래도 못 찾으면 만들어진 시각이 우리 실행 시각 이후인 PNG를 캐시 전체에서 찾는다.</p>
+
+<p>이 마지막 “시간 기반 검색”은 일종의 안전망이다. 도구의 로그 형식이 미래에 바뀌더라도, “어쨌든 우리가 실행한 직후에 새로 생긴 PNG”라면 그게 우리 결과물일 가능성이 높다.</p>
+
+<p>그리고 PNG를 우리 경로로 복사한 다음, 옆에 작은 메타데이터 파일을 같이 만든다. 이 파일에는 어떤 도구로, 어떤 프롬프트로, 몇 초만에, 몇 바이트짜리 이미지를 만들었는지가 기록된다. 나중에 “이 썸네일은 어떤 글의 어떤 시도에서 만들어진 거지?” 같은 추적이 가능해진다.</p>
+
+<h2>통합 후 어떤 일이 자동으로 일어나는가</h2>
+
+<p>이제 새 글을 발행할 때 흐름은 이렇게 된다.</p>
+
+<pre><code>
+글 초안 작성
+  -&gt; 발행 파이프라인 실행
+  -&gt; 대표이미지 자동 생성
+      └ 1순위: LLM 이미지 생성 CLI
+      └ 실패 시: 내부 API → OpenAI 직호출 → PIL
+  -&gt; Tistory 비공개 임시저장
+  -&gt; 사람 검토
+  -&gt; 공개 발행
+</code></pre>
+
+<p>사람이 손대야 하는 자리는 “비공개 임시저장된 글을 검토하고 공개 발행 버튼을 누르는” 한 자리뿐이다. 대표이미지를 직접 고르거나 수정하는 단계는 일반적으로 사라진다.</p>
+
+<h2>비교</h2>
+
+<p>같은 제목으로 새 경로와 기존 경로를 모두 돌려보고 비교했다.</p>
+
+<p>| 항목 | 이전 (PIL fallback) | 이후 (LLM 이미지 생성 CLI) |</p>
+<p>|---|---|---|</p>
+<p>| 파일 크기 | 약 250KB | 약 1.3MB |</p>
+<p>| 가로 세로 | 1200x630 | 1792x1024 |</p>
+<p>| 한글 제목 | ASCII 변환 후 영문 박스 | 한글 그대로 정확 렌더 |</p>
+<p>| 디자인 | 단순 그라데이션 + 텍스트 | 모던 인포그래픽 스타일 |</p>
+<p>| 생성 시간 | 1초 미만 | 약 70초 |</p>
+<p>| 회귀 안전망 | 없음 | env 변수 한 줄 우회 |</p>
+
+<p>생성 시간만 보면 70배 정도 늘어났지만, 발행 사이클 전체로 보면 글 한 편당 1분 남짓의 차이다. 사람이 직접 썸네일을 만들거나 고르던 시간보다는 짧다.</p>
+
+<h2>의도적으로 손대지 않은 것들</h2>
+
+<p>이번 작업에서 의도적으로 건드리지 않은 부분도 있다.</p>
+
+<p>- 발행 자체 흐름은 그대로 둔다. 비공개 임시저장 → 사람 검토 → 공개 발행이라는 안전 장치는 유지한다.</p>
+<p>- 영상/쇼츠 썸네일은 이번 변경 범위 밖이다. 블로그 글 발행 경로만 다룬다.</p>
+<p>- 외부 결제 경로(직접 API key 호출)를 새로 추가하지 않는다. 이미 사용 중인 도구의 내장 기능을 쓴다.</p>
+<p>- 기존 fallback 사다리는 한 단도 제거하지 않는다. 새 경로가 실패할 때 즉시 회귀할 수 있어야 한다.</p>
+
+<p>이 “손대지 않은 것들”의 목록이 “바꾼 것들”만큼이나 중요하다고 생각한다. 자동화 파이프라인은 한 번에 너무 많이 바꾸면 회귀 디버깅이 급격히 어려워진다.</p>
+
+<h2>내가 얻은 운영 교훈</h2>
+
+<p>이번 작업에서 다시 한 번 확인한 것은 세 가지다.</p>
+
+<p>첫째, 외부 도구는 “생성”과 “배달”을 분리해서 봐야 한다. 도구가 결과물을 만든 시점과 그 결과물이 우리가 원하는 자리에 도착한 시점이 다를 수 있다. 그 사이에 운영체제 정책이 끼어들 여지가 있다.</p>
+
+<p>둘째, 환경변수 하나짜리 비상정지 스위치는 거의 항상 가성비가 좋다. 코드 한 두 줄 추가하는 비용 대비, 운영 중 사고가 났을 때 복구 시간을 크게 줄여준다.</p>
+
+<p>셋째, 새 경로를 추가할 때는 “기존 경로를 어떤 조건에서도 깨뜨리지 않는다”는 제약을 먼저 잡고 시작하는 것이 결국 빠르다. 단계 순서만 바꿔도 fallback이 불완전해질 수 있다.</p>
+
+<h2>정리</h2>
+
+<p>이번 작업의 결론은 짧게 말할 수 있다.</p>
+
+<p>블로그 자동 발행 파이프라인에서 마지막까지 어색하게 남아 있던 단계 하나를, 새로운 1순위 경로 + 기존 fallback 사다리 + 비상정지 스위치 조합으로 정리했다. 새 경로는 한글 제목을 정확히 렌더하고, 디자인 품질이 한 단계 올라간 대표이미지를 직접 만든다. 어떤 이유로든 실패하면 이전과 동일하게 동작하므로, 회귀 위험은 최소화돼 있다.</p>
+
+<p>자동화의 끝은 “모든 것이 자동으로 됐다”가 아니라, “자동이 깨졌을 때 무엇으로 돌아가는지가 명확하다”에 가깝다고 다시 느낀 작업이었다.</p>
+
+    </article>
+
+    <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; color: #666; font-size: 0.85rem;">
+        <p>OO 기술 블로그 &mdash; AI Agent 생태계 구축기</p>
+        <p>원본: <a href="https://onyourside22.tistory.com/entry/%EB%B8%94%EB%A1%9C%EA%B7%B8-%EB%8C%80%ED%91%9C%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%A7%8C%EB%93%9C%EB%8A%94-%EC%9D%BC%EC%9D%84-Codex-CLI%EC%97%90-%EB%A7%A1%EA%B8%B4-%EC%9D%B4%EC%95%BC%EA%B8%B0-%E2%80%94-fallback-%EC%82%AC%EB%8B%A4%EB%A6%AC%EB%8A%94-%EA%B7%B8%EB%8C%80%EB%A1%9C-%EB%91%90%EA%B3%A0">https://onyourside22.tistory.com/entry/%EB%B8%94%EB%A1%9C%EA%B7%B8-%EB%8C%80%ED%91%9C%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%A7%8C%EB%93%9C%EB%8A%94-%EC%9D%BC%EC%9D%84-Codex-CLI%EC%97%90-%EB%A7%A1%EA%B8%B4-%EC%9D%B4%EC%95%BC%EA%B8%B0-%E2%80%94-fallback-%EC%82%AC%EB%8B%A4%EB%A6%AC%EB%8A%94-%EA%B7%B8%EB%8C%80%EB%A1%9C-%EB%91%90%EA%B3%A0</a></p>
+    </footer>
+</body>
+</html>

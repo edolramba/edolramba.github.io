@@ -5,8 +5,32 @@
     <link>https://onyourside22.tistory.com</link>
     <description>OpenOrchestrator 생태계의 설계와 구현을 기록하는 기술 블로그</description>
     <language>ko</language>
-    <lastBuildDate>Sun, 10 May 2026 13:35:53 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 10 May 2026 14:13:33 +0000</lastBuildDate>
     <atom:link href="https://edolramba.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Gemma 4 글을 이해하기 위한 Attention 4컷 정리</title>
+      <link>https://onyourside22.tistory.com/entry/Gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-Attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC</link>
+      <description>Attention은 LLM이 긴 문서·코드·로그 중 지금 답에 필요한 단서를 더 강하게 참고하게 하는 구조다. Gemma 4의 실무 포인트는 이 Attention 비용을 줄여 긴 문맥을 더 싸게 다루는 데 있다.</description>
+      <pubDate>Sun, 10 May 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="false">https://edolramba.github.io/posts/gemma-4-%EA%B8%80%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-attention-4%EC%BB%B7-%EC%A0%95%EB%A6%AC.html</guid>
+      <category>Gemma4</category>
+      <category>Attention</category>
+      <category>LLM</category>
+      <category>OpenClaw</category>
+      <category>LocalAI</category>
+    </item>
+    <item>
+      <title>블로그 대표이미지 만드는 일을 Codex CLI에 맡긴 이야기 — fallback 사다리는 그대로 두고</title>
+      <link>https://onyourside22.tistory.com/entry/%EB%B8%94%EB%A1%9C%EA%B7%B8-%EB%8C%80%ED%91%9C%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%A7%8C%EB%93%9C%EB%8A%94-%EC%9D%BC%EC%9D%84-Codex-CLI%EC%97%90-%EB%A7%A1%EA%B8%B4-%EC%9D%B4%EC%95%BC%EA%B8%B0-%E2%80%94-fallback-%EC%82%AC%EB%8B%A4%EB%A6%AC%EB%8A%94-%EA%B7%B8%EB%8C%80%EB%A1%9C-%EB%91%90%EA%B3%A0</link>
+      <description>Tistory 자동 발행 파이프라인의 대표이미지 단계를 LLM 기반 이미지 생성 도구로 1순위 교체하면서 기존 fallback 사다리는 그대로 두고 회귀 위험을 최소화한 작업 회고.</description>
+      <pubDate>Sun, 10 May 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="false">https://edolramba.github.io/posts/%EB%B8%94%EB%A1%9C%EA%B7%B8-%EB%8C%80%ED%91%9C%EC%9D%B4%EB%AF%B8%EC%A7%80-%EB%A7%8C%EB%93%9C%EB%8A%94-%EC%9D%BC%EC%9D%84-codex-cli%EC%97%90-%EB%A7%A1%EA%B8%B4-%EC%9D%B4%EC%95%BC%EA%B8%B0-fallback-%EC%82%AC%EB%8B%A4%EB%A6%AC%EB%8A%94-%EA%B7%B8%EB%8C%80%EB%A1%9C-%EB%91%90%EA%B3%A0.html</guid>
+      <category>Agentic-AI</category>
+      <category>OpenOrchestrator</category>
+      <category>Tistory</category>
+      <category>Automation</category>
+      <category>Thumbnail</category>
+    </item>
     <item>
       <title>Tistory 글을 검색엔진에 자동으로 발견시키는 법 — GitHub Pages mirror와 IndexNow</title>
       <link>https://onyourside22.tistory.com/entry/Tistory-%EA%B8%80%EC%9D%84-%EA%B2%80%EC%83%89%EC%97%94%EC%A7%84%EC%97%90-%EC%9E%90%EB%8F%99%EC%9C%BC%EB%A1%9C-%EB%B0%9C%EA%B2%AC%EC%8B%9C%ED%82%A4%EB%8A%94-%EB%B2%95-%E2%80%94-GitHub-Pages-mirror%EC%99%80-IndexNow</link>
